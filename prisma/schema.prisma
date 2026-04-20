@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // --- ユーザー管理 ---
@@ -48,8 +48,8 @@ model Post {
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
-  user      User          @relation(fields: [userId], references: [id])
-  category  PostCategory  @relation(fields: [categoryId], references: [id])
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category  PostCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   images    PostImage[]
   likes     PostLike[]
   favorites PostFavorite[]
@@ -64,7 +64,7 @@ model PostImage {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  post Post @relation(fields: [postId], references: [id])
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@map("post_images")
 }
@@ -76,9 +76,10 @@ model PostLike {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  post Post @relation(fields: [postId], references: [id])
-  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, postId])
   @@map("post_likes")
 }
 
@@ -108,8 +109,8 @@ model Spot {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  category  SpotCategory   @relation(fields: [categoryId], references: [id])
-  creator   User           @relation("SpotCreator", fields: [createdBy], references: [id])
+  category  SpotCategory   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  creator   User           @relation("SpotCreator", fields: [createdBy], references: [id], onDelete: Cascade)
   images    SpotImage[]
   reviews   SpotReview[]
   favorites SpotFavorite[]
@@ -124,7 +125,7 @@ model SpotImage {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  spot Spot @relation(fields: [spotId], references: [id])
+  spot Spot @relation(fields: [spotId], references: [id], onDelete: Cascade)
 
   @@map("spot_images")
 }
@@ -151,8 +152,8 @@ model SpotReview {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  spot   Spot          @relation(fields: [spotId], references: [id])
-  user   User          @relation(fields: [userId], references: [id])
+  spot   Spot          @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   images ReviewImage[]
 
   @@map("spot_reviews")
@@ -165,7 +166,7 @@ model ReviewImage {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  review SpotReview @relation(fields: [reviewId], references: [id])
+  review SpotReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
   @@map("review_images")
 }
@@ -187,7 +188,7 @@ model Event {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  creator   User            @relation("EventCreator", fields: [createdBy], references: [id])
+  creator   User            @relation("EventCreator", fields: [createdBy], references: [id], onDelete: Cascade)
   images    EventImage[]
   favorites EventFavorite[]
 
@@ -201,7 +202,7 @@ model EventImage {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  event Event @relation(fields: [eventId], references: [id])
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@map("event_images")
 }
@@ -229,8 +230,8 @@ model UserNotification {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  user         User         @relation(fields: [userId], references: [id])
-  notification Notification @relation(fields: [notificationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
 
   @@map("user_notifications")
 }
@@ -244,9 +245,10 @@ model PostFavorite {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id])
-  post Post @relation(fields: [postId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, postId])
   @@map("post_favorites")
 }
 
@@ -257,9 +259,10 @@ model SpotFavorite {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id])
-  spot Spot @relation(fields: [spotId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spot Spot @relation(fields: [spotId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, spotId])
   @@map("spot_favorites")
 }
 
@@ -270,8 +273,9 @@ model EventFavorite {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user  User  @relation(fields: [userId], references: [id])
-  event Event @relation(fields: [eventId], references: [id])
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, eventId])
   @@map("event_favorites")
 }
