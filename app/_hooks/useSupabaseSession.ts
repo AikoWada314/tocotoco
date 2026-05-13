@@ -11,14 +11,21 @@ export const useSupabaseSession = () => {
 
   useEffect(() => {
     const fetcher = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setSession(session);
-      setToken(session?.access_token || null);
+      try {
+        const {
+          data: { session },
+          //supabase.auth.getSession() でサーバーに「今ログインしてる？」と問い合わせる
+        } = await supabase.auth.getSession();
+        setSession(session);
+        setToken(session?.access_token || null);
+      } catch (error){
+        setSession(null);
+      }
     };
     fetcher();
+    //pathnameが変わったら再ロード
   }, [pathname]);
 
+  //sessionがundefinedの場合はロード中、nullの場合はログインしていない、Sessionの場合はログインしている
   return { session, isLoading: session === undefined, token };
 };
