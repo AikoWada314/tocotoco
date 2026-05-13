@@ -5,7 +5,9 @@ import Link from 'next/link'
 import { useSupabaseSession } from '../_hooks/useSupabaseSession'
 import { supabase } from '../_libs/supabase'
 import { useRouter } from 'next/navigation'
-import  React, { useState, useEffect } from 'react'
+import React from 'react'
+import useSWR from 'swr'
+import { MeResponse } from '@/app/api/me/route'
 
 export const Header: React.FC = () => {
   const router = useRouter();
@@ -16,19 +18,19 @@ export const Header: React.FC = () => {
   }
 
   const { session, isLoading } = useSupabaseSession()
-  const [iconUrl, setIconUrl] = useState<string | null>(null)
 
-  useEffect(() => {
-    if(!session) return
-    const fetchIcon = async () =>{
-        const res = await fetch('/api/me', {
-            headers:{ Authorization: `Bearer ${session.access_token}`}
-        })
-        const data = await res.json()
-        setIconUrl(data.user.iconUrl)
+  const fetcher = async (url: string) =>{
+    const resp = await fetch(url, {
+      headers:{ Authorization: `Bearer ${session?.access_token}`}
+    });
+    if (resp.status !== 200) {
+      const errorData = await resp.json();
+      throw new Error(errorData.message);
     }
-    fetchIcon()
-  }, [session])
+    return resp.json();
+  }
+
+  const { data: me } = useSWR<MeResponse>(session ? '/api/me' : null, fetcher)
 
   return (
     <header className="p-6 font-bold flex justify-between items-center">
@@ -40,7 +42,7 @@ export const Header: React.FC = () => {
           {session ? (
             <>
               <Link href="/profile" className="header-link">
-              <Image src={iconUrl || '/user.svg'} alt="user icon" width={24} height={24} priority />
+              <Image src={me?.user?.iconUrl || '/user.svg'} alt="user icon" width={24} height={24} priority />
               </Link>
               <button onClick={handleLogout}>ログアウト</button>
             </>

@@ -1,6 +1,6 @@
 import { prisma } from "@/app/_libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/app/_libs/supabase";
+import { getAuthUser } from "@/app/_libs/auth";
 
 export type MeResponse = {
   user: {
@@ -12,12 +12,7 @@ export type MeResponse = {
 
 //ログイン中のユーザー情報の取得
 export const GET = async (request: NextRequest) => {
-  const token = request.headers.get("Authorization")?.replace("Bearer ", "");
-  if(!token){
-    return NextResponse.json({message:"ログインが必要です"}, {status:401})
-  }
-
-  const {data:{user}} = await supabase.auth.getUser(token);
+  const user = await getAuthUser(request);
   if(!user){
     return NextResponse.json({message:"ログインが必要です"}, {status:401})
   }
