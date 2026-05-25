@@ -6,8 +6,7 @@ import { useSupabaseSession } from '../_hooks/useSupabaseSession'
 import { supabase } from '../_libs/supabase'
 import { useRouter } from 'next/navigation'
 import React from 'react'
-import useSWR from 'swr'
-import { MeResponse } from '@/app/api/me/route'
+import { useMe } from '../_hooks/useMe'
 
 export const Header: React.FC = () => {
   const router = useRouter();
@@ -19,18 +18,7 @@ export const Header: React.FC = () => {
 
   const { session, isLoading } = useSupabaseSession()
 
-  const fetcher = async (url: string) =>{
-    const resp = await fetch(url, {
-      headers:{ Authorization: `Bearer ${session?.access_token}`}
-    });
-    if (resp.status !== 200) {
-      const errorData = await resp.json();
-      throw new Error(errorData.message);
-    }
-    return resp.json();
-  }
-
-  const { data: me } = useSWR<MeResponse>(session ? '/api/me' : null, fetcher)
+  const { me } = useMe()
 
   return (
     <header className="p-6 font-bold flex justify-between items-center">
@@ -51,7 +39,7 @@ export const Header: React.FC = () => {
               <Link href="/contact" className="header-link">
                 お問い合わせ
               </Link>
-              <Link href="/sign_in" className="header-link">
+              <Link href="/auth/login" className="header-link">
                 ログイン
               </Link>
             </>
