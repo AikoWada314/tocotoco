@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# prisma (generated client + local sqlite)
+/app/generated/prisma
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# MCP config (contains API tokens)
+.mcp.json

@@ -1,0 +1,52 @@
+'use client'
+
+import Image from 'next/image'
+import Link from 'next/link'
+import { useSupabaseSession } from '../_hooks/useSupabaseSession'
+import { supabase } from '../_libs/supabase'
+import { useRouter } from 'next/navigation'
+import React from 'react'
+import { useApiSWR } from '../_hooks/useApiSWR'
+import { MeResponse } from '@/app/api/me/route'
+
+export const Header: React.FC = () => {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    await router.replace('/')
+  }
+
+  const { session, isLoading } = useSupabaseSession();
+
+  const { data: me } = useApiSWR<MeResponse>("/api/me");
+
+  return (
+    <header className="p-6 font-bold flex justify-between items-center">
+      <Link href="/" className="header-link">
+      <Image src="/logo.svg" alt="tocotoco logo" width={147} height={28} priority />
+      </Link>
+      {!isLoading && (
+        <div className="flex items-center gap-4">
+          {session ? (
+            <>
+              <Link href="/profile" className="header-link">
+              <Image src={me?.user?.iconUrl || '/user.svg'} alt="user icon" width={24} height={24} priority />
+              </Link>
+              <button onClick={handleLogout}>ログアウト</button>
+            </>
+          ) : (
+            <>
+              <Link href="/contact" className="header-link">
+                お問い合わせ
+              </Link>
+              <Link href="/auth/login" className="header-link">
+                ログイン
+              </Link>
+            </>
+          )}
+        </div>
+      )}
+    </header>
+  )
+}
