@@ -6,7 +6,8 @@ import { useSupabaseSession } from '../_hooks/useSupabaseSession'
 import { supabase } from '../_libs/supabase'
 import { useRouter } from 'next/navigation'
 import React from 'react'
-import { useMe } from '../_hooks/useMe'
+import { useApiSWR } from '../_hooks/useApiSWR'
+import { MeResponse } from '@/app/api/me/route'
 
 export const Header: React.FC = () => {
   const router = useRouter();
@@ -16,9 +17,9 @@ export const Header: React.FC = () => {
     await router.replace('/')
   }
 
-  const { session, isLoading } = useSupabaseSession()
+  const { session, isLoading } = useSupabaseSession();
 
-  const { me } = useMe()
+  const { data: me } = useApiSWR<MeResponse>("/api/me");
 
   return (
     <header className="p-6 font-bold flex justify-between items-center">
