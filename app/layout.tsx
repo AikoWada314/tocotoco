@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import { Header } from './_components/Header';
-import { Footer } from './_components/Footer';
+import { FooterWrapper } from './_components/FooterWrapper';
 
 const notoSansJP = Noto_Sans_JP({
   variable: "--font-noto-sans-jp",
@@ -26,9 +26,11 @@ export default function RootLayout({
       className={`${notoSansJP.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Header />
-        {children}
-        <Footer />
+        <div className="w-full max-w-3xl mx-auto flex flex-col flex-1">
+          <Header />
+          {children}
+        </div>
+        <FooterWrapper />
       </body>
     </html>
   );
