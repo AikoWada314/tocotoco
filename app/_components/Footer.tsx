@@ -7,6 +7,8 @@ import { EventIcon } from './icons/EventIcon'
 import { MyPageIcon } from './icons/MyPageIcon'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSupabaseSession } from '../_hooks/useSupabaseSession'
+
 
 const navItems = [
   { href: '/',       label: 'ホーム',     Icon: HomeIcon   },
@@ -18,6 +20,10 @@ const navItems = [
 
 export const Footer = () => {
   const pathname = usePathname()
+
+  const { session, isLoading } = useSupabaseSession()
+
+  if (isLoading || !session) return null
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 backdrop-blur-[6px] bg-[rgba(255,255,255,0.95)] border-t border-[#f1f5f9] h-16">
