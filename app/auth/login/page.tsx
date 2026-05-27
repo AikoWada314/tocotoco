@@ -168,7 +168,7 @@ export default function LoginPage() {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="your@email.com"
+                placeholder="ikedacity@email.com"
                 required
                 className="bg-[#f8fafc] border border-[#e2e8f0] rounded-[8px] pl-12 pr-4 py-4 w-full text-[16px] text-[#6b7280] placeholder:text-[#6b7280] outline-none focus:border-[#3a7e69]"
               />
