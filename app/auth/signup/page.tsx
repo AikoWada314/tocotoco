@@ -6,55 +6,11 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/app/_libs/supabase";
 import Link from "next/link";
 import Image from "next/image";
-
-function EmailIcon() {
-  return (
-    <svg width="17" height="13" viewBox="0 0 17 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0.5" y="0.5" width="16" height="12" rx="1.5" stroke="#94a3b8" />
-      <path d="M1 1.5L8.5 7.5L16 1.5" stroke="#94a3b8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function LockIcon() {
-  return (
-    <svg width="14" height="18" viewBox="0 0 14 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0.5" y="7.5" width="13" height="10" rx="1.5" stroke="#94a3b8" />
-      <path d="M3.5 7.5V5C3.5 3.067 5.067 1.5 7 1.5C8.933 1.5 10.5 3.067 10.5 5V7.5" stroke="#94a3b8" strokeLinecap="round" />
-      <circle cx="7" cy="12.5" r="1.5" fill="#94a3b8" />
-    </svg>
-  );
-}
-
-function UserIcon() {
-  return (
-    <svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="8" cy="5.5" r="3.5" stroke="#94a3b8" />
-      <path d="M1 15.5C1 12.186 4.134 9.5 8 9.5C11.866 9.5 15 12.186 15 15.5" stroke="#94a3b8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function EyeIcon({ open }: { open: boolean }) {
-  return open ? (
-    <svg width="19" height="13" viewBox="0 0 19 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M1 6.5C1 6.5 4 1 9.5 1C15 1 18 6.5 18 6.5C18 6.5 15 12 9.5 12C4 12 1 6.5 1 6.5Z" stroke="#94a3b8" strokeLinecap="round" />
-      <circle cx="9.5" cy="6.5" r="2.5" stroke="#94a3b8" />
-    </svg>
-  ) : (
-    <svg width="19" height="15" viewBox="0 0 19 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M1 1L18 14M7.5 3.5C8.1 3.2 8.8 3 9.5 3C15 3 18 8.5 18 8.5C17.5 9.4 16.8 10.3 16 11M3 5.5C1.9 6.5 1 8.5 1 8.5C1 8.5 4 14 9.5 14C10.9 14 12.2 13.6 13.3 13" stroke="#94a3b8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function ArrowIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
+import { SubmitButton } from "@/app/_components/SubmitButton";
+import { UserIcon } from "@/app/_components/icons/UserIcon";
+import { EmailIcon } from "@/app/_components/icons/EmailIcon";
+import { LockIcon } from "@/app/_components/icons/LockIcon";
+import { EyeIcon } from "@/app/_components/icons/EyeIcon";
 
 type SignupFormData = {
   name: string;
@@ -63,22 +19,6 @@ type SignupFormData = {
   confirm: string;
 };
 
-function SubmitButton({ isSubmitting }: { isSubmitting: boolean }) {
-  return (
-    <button
-      type="submit"
-      disabled={isSubmitting}
-      className="bg-[#3a7e69] text-white rounded-[8px] py-4 w-full flex items-center justify-center gap-2 font-bold text-[16px] shadow-[0px_10px_15px_-3px_rgba(58,126,105,0.2),0px_4px_6px_-4px_rgba(58,126,105,0.2)] disabled:opacity-50"
-    >
-      {isSubmitting ? "登録中..." : (
-        <>
-          会員登録
-          <ArrowIcon />
-        </>
-      )}
-    </button>
-  );
-}
 
 export default function SignupPage() {
   const router = useRouter();
@@ -224,7 +164,7 @@ export default function SignupPage() {
           </div>
 
           {serverError && <p className="text-red-500 text-sm">{serverError}</p>}
-          <SubmitButton isSubmitting={isSubmitting} />
+          <SubmitButton label="会員登録" pendingLabel="登録中..." isSubmitting={isSubmitting} />
         </form>
 
         <div className="border-t border-[#f1f5f9] pt-6 text-center text-[14px] text-[#475569]">
