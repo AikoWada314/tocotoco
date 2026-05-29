@@ -11,7 +11,7 @@ const notoSansJP = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "いけまち",
+  title: "tocotoco | 池田市の情報共有アプリ",
   description: "地域のつぶやき・スポット・イベントを共有するコミュニティ",
 };
 

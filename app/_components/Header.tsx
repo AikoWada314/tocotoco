@@ -2,51 +2,65 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { useState } from 'react'
 import { useSupabaseSession } from '../_hooks/useSupabaseSession'
-import { supabase } from '../_libs/supabase'
-import { useRouter } from 'next/navigation'
-import React from 'react'
 import { useApiSWR } from '../_hooks/useApiSWR'
 import { MeResponse } from '@/app/api/me/route'
+import { BellIcon } from './icons/BellIcon'
+import { NotificationModal } from './NotificationModal'
+
 
 export const Header: React.FC = () => {
-  const router = useRouter();
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    await router.replace('/')
-  }
-
-  const { session, isLoading } = useSupabaseSession();
-
-  const { data: me } = useApiSWR<MeResponse>("/api/me");
+  const { session, isLoading } = useSupabaseSession()
+  const { data: me } = useApiSWR<MeResponse>('/api/me')
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false)
 
   return (
-    <header className="p-6 font-bold flex justify-between items-center">
-      <Link href="/" className="header-link">
-      <Image src="/logo.svg" alt="tocotoco logo" width={147} height={28} priority />
-      </Link>
-      {!isLoading && (
-        <div className="flex items-center gap-4">
-          {session ? (
-            <>
-              <Link href="/profile" className="header-link">
-              <Image src={me?.user?.iconUrl || '/user.svg'} alt="user icon" width={24} height={24} priority />
-              </Link>
-              <button onClick={handleLogout}>ログアウト</button>
-            </>
-          ) : (
-            <>
-              <Link href="/contact" className="header-link">
-                お問い合わせ
-              </Link>
-              <Link href="/auth/login" className="header-link">
-                ログイン
-              </Link>
-            </>
-          )}
-        </div>
-      )}
-    </header>
+    <>
+      <header className="p-6 font-bold flex justify-between items-center">
+        <Link href="/">
+          <Image src="/logo.svg" alt="tocotoco logo" width={147} height={28} priority />
+        </Link>
+
+        {!isLoading && (
+          <div className="flex items-center gap-4">
+            {session ? (
+              <>
+                <button
+                  onClick={() => setIsNotificationOpen(true)}
+                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <BellIcon />
+                </button>
+                <Link href="/profile">
+                  <Image
+                    src={me?.user?.iconUrl || '/user.svg'}
+                    alt="user icon"
+                    width={32}
+                    height={32}
+                    className="rounded-full"
+                    priority
+                  />
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/contact" className="text-sm text-[#334155]">
+                  お問い合わせ
+                </Link>
+                <Link href="/auth/login" className="text-sm text-[#334155]">
+                  ログイン
+                </Link>
+              </>
+            )}
+          </div>
+        )}
+      </header>
+      <NotificationModal
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+      />
+    </>
   )
 }
