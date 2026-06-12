@@ -7,13 +7,13 @@ import { useSupabaseSession } from '../_hooks/useSupabaseSession'
 import { useApiSWR } from '../_hooks/useApiSWR'
 import { MeResponse } from '@/app/api/me/route'
 import { BellIcon } from './icons/BellIcon'
-import { CloseIcon } from './icons/CloseIcon'
+import { NotificationModal } from './NotificationModal'
 
 export const Header: React.FC = () => {
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false)
 
   const { session, isLoading } = useSupabaseSession()
   const { data: me } = useApiSWR<MeResponse>('/api/me')
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false)
 
   return (
     <>
@@ -56,39 +56,10 @@ export const Header: React.FC = () => {
           </div>
         )}
       </header>
-
-      {/* 通知モーダル */}
-      {isNotificationOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-50 flex justify-end items-start"
-          onClick={() => setIsNotificationOpen(false)}
-        >
-          <div
-            className="bg-white w-full max-w-sm mt-16 mr-4 rounded-[12px] shadow-lg overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* ヘッダー */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#f1f5f9]">
-              <h2 className="text-[#334155] text-[16px] font-bold">通知</h2>
-              <button
-                onClick={() => setIsNotificationOpen(false)}
-                className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-              >
-                <CloseIcon />
-              </button>
-            </div>
-
-            {/* 通知リスト */}
-            <div className="max-h-[400px] overflow-y-auto">
-              {/* 通知がない場合 */}
-              <div className="flex flex-col items-center justify-center py-12 text-[#94a3b8] text-sm gap-2">
-                <BellIcon />
-                <p>通知はありません</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <NotificationModal
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+      />
     </>
   )
 }
