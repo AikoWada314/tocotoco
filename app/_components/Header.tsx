@@ -9,7 +9,6 @@ import { MeResponse } from '@/app/api/me/route'
 import { BellIcon } from './icons/BellIcon'
 import { NotificationModal } from './NotificationModal'
 
-
 export const Header: React.FC = () => {
 
   const { session, isLoading } = useSupabaseSession()
