@@ -22,7 +22,6 @@ export const Footer = () => {
   const pathname = usePathname()
 
   const { session, isLoading } = useSupabaseSession()
-
   if (isLoading || !session) return null
 
   return (

@@ -16,6 +16,8 @@ model User {
   id             Int      @id @default(autoincrement())
   supabaseUserId String   @unique @map("supabase_user_id")
   name           String
+  nickname       String?
+  userId         String?  @unique @map("user_id")
   iconUrl        String?  @map("icon_url")
   bio            String?
   role           String
@@ -41,7 +43,6 @@ model User {
 model Post {
   id         Int      @id @default(autoincrement())
   userId     Int      @map("user_id")
-  title      String
   content    String
   categoryId Int      @map("category_id")
   isDraft    Boolean  @map("is_draft")
