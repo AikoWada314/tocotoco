@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useApiSWR } from "./_hooks/useApiSWR";
 import { PostsIndexResponse } from "./api/posts/route";
 import { useSupabaseSession } from "./_hooks/useSupabaseSession";
+import { getPostImageUrl } from "./_libs/storage";
 
 function formatTimeAgo(date: Date | string) {
   const diff = Date.now() - new Date(date).getTime();
@@ -52,91 +53,99 @@ export default function PostPage() {
       <div className="flex-1 pb-32">
         {posts.map((post) => (
           <Link key={post.id} href={`/posts/${post.id}`} className="block">
-          <article
-            className="border-b border-[#f1f5f9] px-4 py-4"
-          >
-            <div className="flex gap-3">
-              {/* アバター */}
-              <div className="shrink-0 w-10 h-10 rounded-full bg-[#e2e8f0] overflow-hidden">
-                <Image
-                  src={post.user.iconUrl || "/user.svg"}
-                  alt={post.user.name}
-                  width={40}
-                  height={40}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              {/* 右カラム */}
-              <div className="flex-1 min-w-0 flex flex-col gap-[3.3px]">
-                {/* 名前・時刻・カテゴリバッジ */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[14px] font-bold text-[#1e293b]">
-                    {post.user.nickname ?? post.user.name}
-                  </span>
-                  <span className="text-[12px] text-[#94a3b8]">
-                    {formatTimeAgo(post.createdAt)}
-                  </span>
-                  <div className="ml-auto shrink-0">
-                    <span className="text-[10px] font-bold text-[#3a7e69] bg-[rgba(58,126,105,0.1)] rounded-full px-2 py-0.5">
-                      {post.category.name}
-                    </span>
-                  </div>
+            <article className="border-b border-[#f1f5f9] px-4 py-4">
+              <div className="flex gap-3">
+                {/* アバター */}
+                <div className="shrink-0 w-10 h-10 rounded-full bg-[#e2e8f0] overflow-hidden">
+                  <Image
+                    src={post.user.iconUrl || "/user.svg"}
+                    alt={post.user.name}
+                    width={40}
+                    height={40}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
 
-                {/* 本文 */}
-                <p className="text-[14px] text-[#334155] leading-[22.75px]">
-                  {post.content}
-                </p>
-
-                {/* 画像（あれば） */}
-                {post.images.length > 0 && (
-                  <div className="border border-[#f1f5f9] rounded-2xl overflow-hidden mt-1 pt-2.5 px-px pb-px">
-                    <Image
-                      src={post.images[0].imageUrl}
-                      alt=""
-                      width={400}
-                      height={192}
-                      className="w-full h-48 object-cover rounded-[14px]"
-                    />
+                {/* 右カラム */}
+                <div className="flex-1 min-w-0 flex flex-col gap-[3.3px]">
+                  {/* 名前・時刻・カテゴリバッジ */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[14px] font-bold text-[#1e293b]">
+                      {post.user.nickname ?? post.user.name}
+                    </span>
+                    <span className="text-[12px] text-[#94a3b8]">
+                      {formatTimeAgo(post.createdAt)}
+                    </span>
+                    <div className="ml-auto shrink-0">
+                      <span className="text-[10px] font-bold text-[#3a7e69] bg-[rgba(58,126,105,0.1)] rounded-full px-2 py-0.5">
+                        {post.category.name}
+                      </span>
+                    </div>
                   </div>
-                )}
 
-                {/* いいね・コメント数 */}
-                <div className="flex items-center gap-6 mt-1">
-                  <button className="flex items-center gap-1.5">
-                    <svg width="18" height="17" viewBox="0 0 18 17" fill="none">
-                      <path
-                        d="M9 15.5C9 15.5 1.5 11 1.5 5.75C1.5 4.55653 1.97411 3.41193 2.81802 2.56802C3.66193 1.72411 4.80653 1.25 6 1.25C7.19347 1.25 8.33807 1.72411 9.18198 2.56802L9 2.75L8.81802 2.56802C9.66193 1.72411 10.8065 1.25 12 1.25C13.1935 1.25 14.3381 1.72411 15.182 2.56802C16.0259 3.41193 16.5 4.55653 16.5 5.75C16.5 11 9 15.5 9 15.5Z"
-                        stroke="#3a7e69"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    <span className="text-[14px] text-[#3a7e69]">
-                      {post.likes.length}
-                    </span>
-                  </button>
+                  {/* 本文 */}
+                  <p className="text-[14px] text-[#334155] leading-[22.75px]">
+                    {post.content}
+                  </p>
 
-                  <button className="flex items-center gap-1.5">
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <path
-                        d="M15.75 8.625C15.7526 9.61459 15.5173 10.5903 15.0638 11.4713C14.5275 12.5236 13.7063 13.4071 12.6939 14.0235C11.6816 14.6399 10.5176 14.9653 9.33127 14.9625C8.34168 14.965 7.36595 14.7297 6.48502 14.2763L2.25 15.75L3.72375 11.515C3.27026 10.634 3.03498 9.65832 3.03752 8.66873C3.03471 7.48239 3.36012 6.31838 3.97651 5.30608C4.59291 4.29378 5.47637 3.4725 6.52877 2.93624C7.40969 2.4827 8.38542 2.24742 9.37502 2.25H9.75002C11.3123 2.33625 12.787 2.99925 13.8985 4.10148C15.0101 5.20371 15.6638 6.67772 15.75 8.24998V8.625Z"
-                        stroke="#64748b"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                  {/* 画像（あれば） */}
+                  {post.images.length > 0 && (
+                    <div className="border border-[#f1f5f9] rounded-2xl overflow-hidden mt-1 pt-2.5 px-px pb-px">
+                      <Image
+                        src={getPostImageUrl(post.images[0].imageUrl)}
+                        alt=""
+                        width={400}
+                        height={192}
+                        className="w-full h-48 object-cover rounded-[14px]"
                       />
-                    </svg>
-                    <span className="text-[14px] text-[#64748b]">
-                      {post.favorites.length}
-                    </span>
-                  </button>
+                    </div>
+                  )}
+
+                  {/* いいね・コメント数 */}
+                  <div className="flex items-center gap-6 mt-1">
+                    <button className="flex items-center gap-1.5">
+                      <svg
+                        width="18"
+                        height="17"
+                        viewBox="0 0 18 17"
+                        fill="none"
+                      >
+                        <path
+                          d="M9 15.5C9 15.5 1.5 11 1.5 5.75C1.5 4.55653 1.97411 3.41193 2.81802 2.56802C3.66193 1.72411 4.80653 1.25 6 1.25C7.19347 1.25 8.33807 1.72411 9.18198 2.56802L9 2.75L8.81802 2.56802C9.66193 1.72411 10.8065 1.25 12 1.25C13.1935 1.25 14.3381 1.72411 15.182 2.56802C16.0259 3.41193 16.5 4.55653 16.5 5.75C16.5 11 9 15.5 9 15.5Z"
+                          stroke="#3a7e69"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <span className="text-[14px] text-[#3a7e69]">
+                        {post.likes.length}
+                      </span>
+                    </button>
+
+                    <button className="flex items-center gap-1.5">
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 18 18"
+                        fill="none"
+                      >
+                        <path
+                          d="M15.75 8.625C15.7526 9.61459 15.5173 10.5903 15.0638 11.4713C14.5275 12.5236 13.7063 13.4071 12.6939 14.0235C11.6816 14.6399 10.5176 14.9653 9.33127 14.9625C8.34168 14.965 7.36595 14.7297 6.48502 14.2763L2.25 15.75L3.72375 11.515C3.27026 10.634 3.03498 9.65832 3.03752 8.66873C3.03471 7.48239 3.36012 6.31838 3.97651 5.30608C4.59291 4.29378 5.47637 3.4725 6.52877 2.93624C7.40969 2.4827 8.38542 2.24742 9.37502 2.25H9.75002C11.3123 2.33625 12.787 2.99925 13.8985 4.10148C15.0101 5.20371 15.6638 6.67772 15.75 8.24998V8.625Z"
+                          stroke="#64748b"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <span className="text-[14px] text-[#64748b]">
+                        {post.favorites.length}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </article>
+            </article>
           </Link>
         ))}
       </div>

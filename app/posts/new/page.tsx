@@ -49,10 +49,7 @@ export default function NewPostPage() {
         if (uploadError) {
           throw new Error(uploadError.message);
         }
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("post_images").getPublicUrl(path);
-        imageUrl = publicUrl;
+        imageUrl = path;
       }
 
       const body = {
@@ -69,17 +66,15 @@ export default function NewPostPage() {
         },
         body: JSON.stringify(body),
       });
-      if (!res.ok) { 
+      if (!res.ok) {
         throw new Error("投稿に失敗しました");
       }
       alert("投稿を作成しました。");
       const { id }: CreatePostResponse = await res.json();
-      router.push("/"); 
-    } 
-    catch (error) {
+      router.push("/");
+    } catch (error) {
       alert("投稿に失敗しました");
-    }
-    finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -237,7 +232,7 @@ export default function NewPostPage() {
               <button
                 type="button"
                 key={cat.id}
-                onClick={() => setValue("categoryId", cat.id)} 
+                onClick={() => setValue("categoryId", cat.id)}
                 disabled={isLoading}
                 className={
                   watch("categoryId") === cat.id
