@@ -34,6 +34,7 @@ model User {
   postFavorites     PostFavorite[]
   spotFavorites     SpotFavorite[]
   eventFavorites    EventFavorite[]
+  postComments PostComment[]
 
   @@map("users")
 }
@@ -54,6 +55,8 @@ model Post {
   images    PostImage[]
   likes     PostLike[]
   favorites PostFavorite[]
+
+  comments PostComment[]
 
   @@map("posts")
 }
@@ -82,6 +85,22 @@ model PostLike {
 
   @@unique([userId, postId])
   @@map("post_likes")
+}
+
+
+model PostComment {
+  id        Int      @id @default(autoincrement())
+  postId    Int      @map("post_id")
+  userId    Int      @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  content   String
+  imageUrl String? @map("image_url")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("post_comments")
 }
 
 model PostCategory {
