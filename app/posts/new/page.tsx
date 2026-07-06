@@ -11,7 +11,6 @@ import { MeResponse } from "@/app/api/me/route";
 import { PostCategories } from "@/app/api/post-categories/route";
 import { PostFormValues } from "@/app/posts/_hooks/usePostForm";
 import { CreatePostRequestBody } from "@/app/api/posts/route";
-import { CreatePostResponse } from "@/app/api/posts/route";
 
 export default function NewPostPage() {
   const router = useRouter();
@@ -70,9 +69,8 @@ export default function NewPostPage() {
         throw new Error("投稿に失敗しました");
       }
       alert("投稿を作成しました。");
-      const { id }: CreatePostResponse = await res.json();
       router.push("/");
-    } catch (error) {
+    } catch {
       alert("投稿に失敗しました");
     } finally {
       setIsLoading(false);

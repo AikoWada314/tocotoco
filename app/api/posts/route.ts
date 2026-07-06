@@ -87,45 +87,44 @@ export type CreatePostRequestBody = {
   imageUrl?: string;
 };
 
-// 投稿作成APIのレスポンスの型
-export type CreatePostResponse = {
-  id: number;
-};
-
 // POSTという命名にすることで、POSTリクエストの時にこの関数が呼ばれる
 export const POST = async (request: NextRequest) => {
-  const authUser = await getAuthUser(request)
+  const authUser = await getAuthUser(request);
   if (!authUser) {
-    return NextResponse.json({ message: "ログインが必要です" }, { status: 401 })
+    return NextResponse.json(
+      { message: "ログインが必要です" },
+      { status: 401 },
+    );
   }
 
   try {
-    const body: CreatePostRequestBody = await request.json()
-    const { content, categoryId, imageUrl } = body
+    const body: CreatePostRequestBody = await request.json();
+    const { content, categoryId, imageUrl } = body;
 
     const dbUser = await prisma.user.findUnique({
       where: { supabaseUserId: authUser.id },
-    })
+    });
     if (!dbUser) {
-      return NextResponse.json({ message: "ユーザーが見つかりません" }, { status: 404 })
+      return NextResponse.json(
+        { message: "ユーザーが見つかりません" },
+        { status: 404 },
+      );
     }
 
-    const data = await prisma.post.create({
+    await prisma.post.create({
       data: {
         content,
         categoryId,
         userId: dbUser.id,
         isDraft: false,
-        ...(imageUrl
-          ? { images: { create: { imageUrl } } }
-          : {}),
+        ...(imageUrl ? { images: { create: { imageUrl } } } : {}),
       },
-    })
+    });
 
-    return NextResponse.json<CreatePostResponse>({ id: data.id })
+    return NextResponse.json({ message: "投稿を作成しました" }, { status: 201 });
   } catch (error) {
     if (error instanceof Error) {
-      return NextResponse.json({ message: error.message }, { status: 400 })
+      return NextResponse.json({ message: error.message }, { status: 400 });
     }
   }
-}
+};
