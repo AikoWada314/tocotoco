@@ -1,13 +1,12 @@
 import { prisma } from "@/app/_libs/prisma";
-import { NextResponse } from "next/server";
-import { supabase } from "@/app/_libs/supabase";
+import { NextRequest, NextResponse } from "next/server";
+import { getAuthUser } from "@/app/_libs/auth";
 
 //投稿一覧の型定義
 export type PostsIndexResponse = {
   posts: {
     id: number;
     userId: number;
-    title: string;
     content: string;
     images: {
       id: number;
@@ -42,6 +41,7 @@ export type PostsIndexResponse = {
     user: {
       id: number;
       name: string;
+      nickname: string | null;
       iconUrl: string | null;
     };
   }[];
@@ -60,6 +60,7 @@ export const GET = async () => {
           select: {
             id: true,
             name: true,
+            nickname: true,
             iconUrl: true,
           },
         },
@@ -80,47 +81,50 @@ export const GET = async () => {
   }
 };
 //新規投稿
-export type PostCreateResponse = {
-  post: {
-    id: number;
-    userId: number;
-    title: string;
-    content: string;
-    categoryId: number;
-    isDraft: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-    category: {
-      id: number;
-      name: string;
-      createdAt: Date;
-      updatedAt: Date;
-    };
-    images: {
-      id: number;
-      postId: number;
-      imageUrl: string;
-      createdAt: Date;
-      updatedAt: Date;
-    }[];
-    likes: {
-      id: number;
-      postId: number;
-      userId: number;
-      createdAt: Date;
-      updatedAt: Date;
-    }[];
-    favorites: {
-      id: number;
-      postId: number;
-      userId: number;
-      createdAt: Date;
-      updatedAt: Date;
-    }[];
-    user: {
-      id: number;
-      name: string;
-      iconUrl: string | null;
-    };
-  };
+export type CreatePostRequestBody = {
+  content: string;
+  categoryId: number;
+  imageUrl?: string;
+};
+
+// POSTという命名にすることで、POSTリクエストの時にこの関数が呼ばれる
+export const POST = async (request: NextRequest) => {
+  const authUser = await getAuthUser(request);
+  if (!authUser) {
+    return NextResponse.json(
+      { message: "ログインが必要です" },
+      { status: 401 },
+    );
+  }
+
+  try {
+    const body: CreatePostRequestBody = await request.json();
+    const { content, categoryId, imageUrl } = body;
+
+    const dbUser = await prisma.user.findUnique({
+      where: { supabaseUserId: authUser.id },
+    });
+    if (!dbUser) {
+      return NextResponse.json(
+        { message: "ユーザーが見つかりません" },
+        { status: 404 },
+      );
+    }
+
+    await prisma.post.create({
+      data: {
+        content,
+        categoryId,
+        userId: dbUser.id,
+        isDraft: false,
+        ...(imageUrl ? { images: { create: { imageUrl } } } : {}),
+      },
+    });
+
+    return NextResponse.json({ message: "投稿を作成しました" }, { status: 201 });
+  } catch (error) {
+    if (error instanceof Error) {
+      return NextResponse.json({ message: error.message }, { status: 400 });
+    }
+  }
 };

@@ -6,6 +6,7 @@ export type MeResponse = {
   user: {
     id: number;
     name: string;
+    nickname: string | null;
     iconUrl: string | null;
   };
 };
@@ -20,7 +21,7 @@ export const GET = async (request: NextRequest) => {
   try {
     const dbUser = await prisma.user.findUnique({
       where:{supabaseUserId: user.id},
-      select:{id:true, name:true, iconUrl:true},
+      select:{id:true, name:true, nickname:true, iconUrl:true},
     });
     if (!dbUser){
       return NextResponse.json({ message: "ユーザーが見つかりません" }, { status: 404 });

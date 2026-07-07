@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "(until curl -s -o /dev/null http://localhost:3100; do sleep 0.5; done; open http://localhost:3100) & next dev -p 3100",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -30,6 +30,7 @@
     "@types/react-modal": "^3.16.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
+    "prettier": "^3.9.4",
     "prisma": "^7.7.0",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
