@@ -3,10 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useApiSWR } from "./_hooks/useApiSWR";
-import { PostsIndexResponse } from "./api/posts/route";
-import { useSupabaseSession } from "./_hooks/useSupabaseSession";
-import { getPostImageUrl } from "./_libs/storage";
+import { useApiSWR } from "@/app/_hooks/useApiSWR";
+import { PostsIndexResponse } from "@/app/api/posts/route";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
+import { getPostImageUrl } from "@/app/_libs/storage";
 
 function formatTimeAgo(date: Date | string) {
   const diff = Date.now() - new Date(date).getTime();
@@ -139,7 +139,7 @@ export default function PostPage() {
                         />
                       </svg>
                       <span className="text-[14px] text-[#64748b]">
-                        {post.favorites.length}
+                        {post.comments.length}
                       </span>
                     </button>
                   </div>
