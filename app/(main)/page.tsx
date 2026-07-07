@@ -7,15 +7,7 @@ import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { PostsIndexResponse } from "@/app/api/posts/route";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { getPostImageUrl } from "@/app/_libs/storage";
-
-function formatTimeAgo(date: Date | string) {
-  const diff = Date.now() - new Date(date).getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 60) return `${minutes}分前`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}時間前`;
-  return `${Math.floor(hours / 24)}日前`;
-}
+import { formatTimeAgo } from "@/app/_libs/format";
 
 export default function PostPage() {
   const router = useRouter();

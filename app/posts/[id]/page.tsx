@@ -13,24 +13,7 @@ import {
   CommentFormValues,
 } from "@/app/posts/_hooks/useCommentForm";
 import { mutate } from "swr";
-
-// 投稿日時 "2023/10/24 14:30" 形式
-function formatDateTime(date: Date | string) {
-  const d = new Date(date);
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
-}
-
-// コメントの相対時刻 "1時間前"
-function formatTimeAgo(date: Date | string) {
-  const diff = Date.now() - new Date(date).getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return "たった今";
-  if (minutes < 60) return `${minutes}分前`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}時間前`;
-  return `${Math.floor(hours / 24)}日前`;
-}
+import { formatDateTime, formatTimeAgo } from "@/app/_libs/format";
 
 export default function Page() {
   const { id } = useParams();
