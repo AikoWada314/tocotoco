@@ -8,6 +8,7 @@ import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { PageHeader } from "@/app/_components/PageHeader";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { MeResponse } from "@/app/api/me/route";
+import { useState } from "react";
 import {
   useCommentForm,
   CommentFormValues,
@@ -21,22 +22,29 @@ export default function Page() {
   const post = data?.post;
   const { token } = useSupabaseSession();
   const { data: me } = useApiSWR<MeResponse>("/api/me");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { register, handleSubmit, reset } = useCommentForm();
   const onSubmit = async (values: CommentFormValues) => {
-    const res = await fetch(`/api/posts/${id}/comments`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: token ?? "",
-      },
-      body: JSON.stringify({ content: values.content }),
-    });
-    if (!res.ok) {
-      alert("コメントの投稿に失敗しました");
-      return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/posts/${id}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ?? "",
+        },
+        body: JSON.stringify({ content: values.content }),
+      });
+      if (!res.ok) {
+        alert("コメントの投稿に失敗しました");
+        return;
+      }
+
+      reset(); // 入力クリア（setCommentContent("") の代わり）
+      mutate(`/api/posts/${id}`);
+    } finally {
+      setIsSubmitting(false);
     }
-    reset(); // 入力クリア（setCommentContent("") の代わり）
-    mutate(`/api/posts/${id}`); 
   };
 
   if (isLoading)
@@ -203,7 +211,10 @@ export default function Page() {
         </section>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white border-t border-[#f1f5f9] flex gap-3 items-center px-4 pt-[13px] pb-4 shrink-0">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="bg-white border-t border-[#f1f5f9] flex gap-3 items-center px-4 pt-[13px] pb-4 shrink-0"
+      >
         {/* 自分のアバター */}
         <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
           <Image
@@ -227,6 +238,7 @@ export default function Page() {
             type="submit"
             className="absolute right-2 top-1/2 -translate-y-1/2 p-1"
             aria-label="送信"
+            disabled={isSubmitting}
           >
             {/* 紙飛行機アイコン */}
             <svg width="20" height="18" viewBox="0 0 20 18" fill="none">
