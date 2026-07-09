@@ -8,11 +8,13 @@ import { formatDateTime } from "@/app/_libs/format";
 import { EventsIndexResponse } from "@/app/api/events/route";
 import { Calendar } from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import "./calendar.css"; // 標準スタイルの上書き（後に読み込む方が勝つ）
+import "./calendar.css";
+import { useState } from "react";
 
 export default function EventPage() {
   const { data, isLoading } = useApiSWR<EventsIndexResponse>(`/api/events`);
   const events = data?.events;
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   if (isLoading)
     return (
@@ -27,6 +29,26 @@ export default function EventPage() {
       </div>
     );
 
+  // 同じ日付かどうかを判定する関数
+  const isSameDay = (a: Date, b: Date) => {
+    return (
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate()
+    );
+  };
+
+  // カレンダーにイベントがある日付をハイライトするための関数
+  const hasEvent = (date: Date) => {
+    return events.some((event) => isSameDay(new Date(event.eventDate), date));
+  };
+
+  const filteredEvents = selectedDate
+    ? events.filter((event) =>
+        isSameDay(new Date(event.eventDate), selectedDate),
+      )
+    : events;
+
   return (
     <div className="flex flex-col flex-1 min-h-0 bg-white">
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6">
@@ -38,19 +60,33 @@ export default function EventPage() {
         <Calendar
           locale="ja-JP" // 曜日を「日月火水木金土」に
           formatDay={(_, date) => String(date.getDate())} // 「15日」→「15」にする
-          />
+          //イベントがあればドットを表示する
+          tileContent={({ date, view }) =>
+            view === "month" && hasEvent(date) ? (
+              <div className="event-dot" />
+            ) : null
+          }
+          onClickDay={(date) => {
+            if (selectedDate && isSameDay(selectedDate, date)) {
+              setSelectedDate(null); // クリックした日付がすでに選択されている場合は選択解除
+            } else {
+              setSelectedDate(date); // クリックした日付を選択
+            }
+          }}
+          value={selectedDate}
+        />
 
         <h2 className="mb-3 mt-6 text-[16px] font-bold text-[#0f172a]">
-          直近のイベント
+          {selectedDate ? `${selectedDate.getFullYear()}年${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日 のイベント` : "直近のイベント"}
         </h2>
 
-        {events.length === 0 ? (
+        {filteredEvents.length === 0 ? (
           <p className="py-8 text-center text-[14px] text-[#64748b]">
-            イベントはまだありません
+            {selectedDate ? "選択した日付にイベントはありません" : "イベントはまだありません"}
           </p>
         ) : (
           <ul className="flex flex-col gap-3">
-            {events.map((event) => (
+            {filteredEvents.map((event) => (
               <li
                 key={event.id}
                 className="overflow-hidden rounded-[12px] border border-[#f1f5f9] bg-white transition-colors hover:border-[#e2e8f0] hover:bg-[#f8fafc]"

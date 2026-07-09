@@ -79,3 +79,16 @@
   background: #3d7361;
   color: #ffffff;
 }
+
+/* イベントがある日の点（tileContentで差し込む） */
+.event-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #3d7361;
+  margin: 2px auto 0; /* 日付の数字の下・中央に */
+}
+/* 選択中の日は背景が濃い緑なので、点は白にして見えるようにする */
+.react-calendar__tile--active .event-dot {
+  background: #ffffff;
+}
