@@ -29,6 +29,9 @@ export type PostsIndexResponse = {
       createdAt: Date;
       updatedAt: Date;
     }[];
+    comments: {
+      id: number;
+    }[];
     isDraft: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -56,6 +59,7 @@ export const GET = async () => {
         images: true,
         likes: true,
         favorites: true,
+        comments: true,
         user: {
           select: {
             id: true,

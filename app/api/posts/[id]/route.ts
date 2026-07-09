@@ -43,6 +43,18 @@ export type PostShowResponse = {
       nickname: string | null;
       iconUrl: string | null;
     };
+    comments: {
+      id: number;
+      content: string;
+      createdAt: Date;
+      imageUrl: string | null;
+      user: {
+        id: number;
+        name: string;
+        nickname: string | null;
+        iconUrl: string | null;
+      };
+    }[];
   };
 };
 
@@ -70,6 +82,14 @@ export const GET = async (
             iconUrl: true,
           },
         },
+        comments: {
+          include: {
+            user: {
+              select: { id: true, name: true, nickname: true, iconUrl: true },
+            },
+          },
+          orderBy: { createdAt: "desc" }, // 新しい順
+        },
       },
     });
     if (!post) {
@@ -89,4 +109,3 @@ export const GET = async (
     );
   }
 };
-
