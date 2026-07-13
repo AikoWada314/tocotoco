@@ -1,0 +1,94 @@
+/* react-calendar の標準スタイルを Figma のデザインに合わせて上書きする */
+
+.react-calendar {
+  width: 100%;
+  background: #eaf1ed;
+  border: none;
+  border-radius: 16px;
+  padding: 12px;
+  font-family: inherit;
+  line-height: 1.2;
+}
+
+/* ナビゲーション（「2026年 7月」と矢印の行） */
+.react-calendar__navigation {
+  height: 44px;
+  margin-bottom: 4px;
+}
+.react-calendar__navigation button {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  border-radius: 8px;
+}
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus {
+  background: #dde9e2;
+}
+.react-calendar__navigation__arrow {
+  color: #3d7361;
+  font-size: 20px;
+}
+/* 「前々月・翌々月」ボタン（« »）はデザインにないので非表示 */
+.react-calendar__navigation__prev2-button,
+.react-calendar__navigation__next2-button {
+  display: none;
+}
+
+/* 曜日の行（月〜日） */
+.react-calendar__month-view__weekdays {
+  text-transform: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b8a7d;
+}
+.react-calendar__month-view__weekdays abbr {
+  text-decoration: none; /* 標準で付く下線を消す */
+}
+
+/* 日付マス */
+.react-calendar__tile {
+  height: 44px;
+  font-size: 14px;
+  color: #1e293b;
+  border-radius: 8px;
+}
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+  background: #dde9e2;
+}
+
+/* 土日も平日と同じ色に（標準は赤） */
+.react-calendar__month-view__days__day--weekend {
+  color: #1e293b;
+}
+/* 前月・翌月の日付は薄く（weekendより後に書いて優先させる） */
+.react-calendar__month-view__days__day--neighboringMonth {
+  color: #b6c4bd;
+}
+
+/* 今日 */
+.react-calendar__tile--now {
+  background: #d5e5dd;
+}
+
+/* 選択中の日（濃い緑 + 白文字） */
+.react-calendar__tile--active,
+.react-calendar__tile--active:enabled:hover,
+.react-calendar__tile--active:enabled:focus {
+  background: #3d7361;
+  color: #ffffff;
+}
+
+/* イベントがある日の点（tileContentで差し込む） */
+.event-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #3d7361;
+  margin: 2px auto 0; /* 日付の数字の下・中央に */
+}
+/* 選択中の日は背景が濃い緑なので、点は白にして見えるようにする */
+.react-calendar__tile--active .event-dot {
+  background: #ffffff;
+}
