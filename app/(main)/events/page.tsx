@@ -11,10 +11,36 @@ import "react-calendar/dist/Calendar.css";
 import "./calendar.css";
 import { useState } from "react";
 
+// Date → "2026-07-01" 形式の文字列に変換
+const formatYmd = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
 export default function EventPage() {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  // カレンダーが表示している月（月初の日付で持つ）
+  const [calendarMonth, setCalendarMonth] = useState<Date>(
+    () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  );
+
+  // ① 直近のイベント一覧用（今日以降・近い順・最大10件）
   const { data, isLoading } = useApiSWR<EventsIndexResponse>(`/api/events`);
   const events = data?.events;
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  // ② カレンダー用（表示中の月のイベント。タイムゾーンのずれ対策で前後1日広めに取る）
+  const from = formatYmd(
+    new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 0),
+  );
+  const to = formatYmd(
+    new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1),
+  );
+  const { data: monthData } = useApiSWR<EventsIndexResponse>(
+    `/api/events?from=${from}&to=${to}`,
+  );
+  const monthEvents = monthData?.events ?? [];
 
   if (isLoading)
     return (
@@ -38,13 +64,16 @@ export default function EventPage() {
     );
   };
 
-  // カレンダーにイベントがある日付をハイライトするための関数
+  // カレンダーにイベントがある日付をハイライトするための関数（表示中の月のデータを使う）
   const hasEvent = (date: Date) => {
-    return events.some((event) => isSameDay(new Date(event.eventDate), date));
+    return monthEvents.some((event) =>
+      isSameDay(new Date(event.eventDate), date),
+    );
   };
 
+  // 日付選択中はその日のイベント（カレンダー用データから）、未選択なら直近のイベント
   const filteredEvents = selectedDate
-    ? events.filter((event) =>
+    ? monthEvents.filter((event) =>
         isSameDay(new Date(event.eventDate), selectedDate),
       )
     : events;
@@ -71,6 +100,13 @@ export default function EventPage() {
               setSelectedDate(null); // クリックした日付がすでに選択されている場合は選択解除
             } else {
               setSelectedDate(date); // クリックした日付を選択
+            }
+          }}
+          // 月送りしたら、その月のイベントを取得し直す（日付選択は解除）
+          onActiveStartDateChange={({ activeStartDate }) => {
+            if (activeStartDate) {
+              setCalendarMonth(activeStartDate);
+              setSelectedDate(null);
             }
           }}
           value={selectedDate}
