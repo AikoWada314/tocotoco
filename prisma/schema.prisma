@@ -198,6 +198,7 @@ model Event {
   title         String
   description   String?
   eventDate     DateTime @map("event_date")
+  eventEndDate  DateTime? @map("event_end_date")
   place         String
   lat           Float
   lng           Float
