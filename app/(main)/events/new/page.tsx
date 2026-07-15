@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { supabase } from "@/app/_libs/supabase";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import { MeResponse } from "@/app/api/me/route";
 import { EventFormValues } from "@/app/(main)/events/_hooks/useEventForm";
 import { CreateEventRequestBody } from "@/app/api/events/route";
 import { useEventForm } from "@/app/(main)/events/_hooks/useEventForm";
@@ -15,40 +14,23 @@ import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
 export default function NewEventPage() {
   const router = useRouter();
   const { token } = useSupabaseSession();
-  const { data: me } = useApiSWR<MeResponse>("/api/me");
-  const { register, setValue, watch, handleSubmit } = useEventForm();
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const {
+    register,
+    watch,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+  } = useEventForm();
+
   const lat = watch("lat");
   const lng = watch("lng");
 
   const onSubmit = async (values: EventFormValues) => {
-    if (!values.title) {
-      alert("タイトルを入力してください");
-      return;
-    }
     if (values.lat == null || values.lng == null) {
       alert("地図をタップして場所を指定してください");
-      return;
-    }
-    if (
-      values.eventEndDate &&
-      new Date(values.eventEndDate) <= new Date(values.eventDate)
-    ) {
-      alert("終了日時は開始日時より後にしてください");
-      return;
-    }
-    if (!values.organizerName) {
-      alert("主催者名を入力してください");
-      return;
-    }
-    if (!values.place) {
-      alert("開催場所を入力してください");
-      return;
-    }
-    if (!values.description) {
-      alert("イベントの説明を入力してください");
       return;
     }
 
@@ -68,7 +50,7 @@ export default function NewEventPage() {
         imageUrl = path;
       }
 
-      const body = {
+      const body: CreateEventRequestBody = {
         title: values.title,
         eventDate: new Date(values.eventDate).toISOString(),
         eventEndDate: values.eventEndDate
@@ -81,7 +63,7 @@ export default function NewEventPage() {
         lat: values.lat,
         lng: values.lng,
         imageUrl,
-      } satisfies CreateEventRequestBody;
+      };
 
       const res = await fetch("/api/events", {
         method: "POST",
@@ -137,25 +119,32 @@ export default function NewEventPage() {
           イベントを登録
         </h1>
         <button
+          disabled={isLoading}
           type="submit"
-          className="bg-[#3a7e69] text-white text-[14px] font-bold px-4 py-1.5 rounded-full shadow-sm hover:opacity-90 transition-opacity"
+          className="bg-[#3a7e69] text-white text-[14px] font-bold px-4 py-1.5 rounded-full shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          登録する
+          {isLoading ? "登録中..." : "登録する"}
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-4 p-4 pb-28">
+        <fieldset
+          disabled={isLoading}
+          className="flex flex-col gap-4 p-4 pb-28"
+        >
           {/* タイトル */}
           <div className="flex flex-col gap-2">
             <p className="text-[14px] font-bold text-[#334155] leading-5">
               イベント名
             </p>
             <input
-              {...register("title", { required: "内容は必須です" })}
+              {...register("title")}
               placeholder={"例：⚪︎⚪︎祭り"}
               className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white px-4 text-[16px] text-[#0f172a] placeholder:text-[#6b7280] outline-none focus:border-[#3a7e69]"
             />
+            {errors.title && (
+              <p className="text-[12px] text-red-500">{errors.title.message}</p>
+            )}
           </div>
 
           {/* 開催日時 */}
@@ -168,6 +157,11 @@ export default function NewEventPage() {
               {...register("eventDate")}
               className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white px-4 text-[16px] text-[#0f172a] outline-none focus:border-[#3a7e69]"
             />
+            {errors.eventDate && (
+              <p className="text-[12px] text-red-500">
+                {errors.eventDate.message}
+              </p>
+            )}
           </div>
 
           {/* 終了日時 */}
@@ -180,6 +174,11 @@ export default function NewEventPage() {
               {...register("eventEndDate")}
               className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white px-4 text-[16px] text-[#0f172a] outline-none focus:border-[#3a7e69]"
             />
+            {errors.eventEndDate && (
+              <p className="text-[12px] text-red-500">
+                {errors.eventEndDate.message}
+              </p>
+            )}
           </div>
 
           {/* 開催場所 */}
@@ -201,6 +200,11 @@ export default function NewEventPage() {
                 placeholder="場所を入力"
                 className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white pl-10 pr-4 text-[16px] text-[#0f172a] placeholder:text-[#6b7280] outline-none focus:border-[#3a7e69]"
               />
+              {errors.place && (
+                <p className="text-[12px] text-red-500">
+                  {errors.place.message}
+                </p>
+              )}
             </div>
             <div className="h-[300px] overflow-hidden rounded-[12px] border border-[#d1e2dc]">
               <APIProvider
@@ -238,6 +242,11 @@ export default function NewEventPage() {
               }
               className="h-[154px] w-full resize-none rounded-[12px] border border-[#d1e2dc] bg-white p-4 text-[16px] leading-6 text-[#0f172a] placeholder:text-[#6b7280] outline-none focus:border-[#3a7e69]"
             />
+            {errors.description && (
+              <p className="text-[12px] text-red-500">
+                {errors.description.message}
+              </p>
+            )}
           </div>
 
           {/* 写真追加 */}
@@ -313,6 +322,11 @@ export default function NewEventPage() {
                   {...register("organizerName")}
                   className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white px-4 text-[16px] text-[#0f172a] outline-none focus:border-[#3a7e69]"
                 />
+                {errors.organizerName && (
+                  <p className="text-[12px] text-red-500">
+                    {errors.organizerName.message}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-2">
                 <p className="text-[14px] font-bold text-[#334155] leading-5">
@@ -323,10 +337,15 @@ export default function NewEventPage() {
                   {...register("organizerLink")}
                   className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white px-4 text-[16px] text-[#0f172a] outline-none focus:border-[#3a7e69]"
                 />
+                {errors.organizerLink && (
+                  <p className="text-[12px] text-red-500">
+                    {errors.organizerLink.message}
+                  </p>
+                )}
               </div>
             </div>
           </div>
-        </div>
+        </fieldset>
       </div>
     </form>
   );

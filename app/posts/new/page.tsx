@@ -112,9 +112,10 @@ export default function NewPostPage() {
         </h1>
         <button
           type="submit"
-          className="bg-[#3a7e69] text-white text-[14px] font-medium px-5 py-2 rounded-full shadow-sm hover:opacity-90 transition-opacity"
+          className="bg-[#3a7e69] text-white text-[14px] font-medium px-5 py-2 rounded-full shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isLoading}
         >
-          投稿する
+          {isLoading ? "投稿中..." : "投稿する"}
         </button>
       </div>
 
@@ -231,7 +232,6 @@ export default function NewPostPage() {
                 type="button"
                 key={cat.id}
                 onClick={() => setValue("categoryId", cat.id)}
-                disabled={isLoading}
                 className={
                   watch("categoryId") === cat.id
                     ? "bg-[#3a7e69] text-white text-[12px] font-medium px-4 py-2 rounded-full"

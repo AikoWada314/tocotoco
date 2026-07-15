@@ -6,8 +6,6 @@ import { EventShowResponse } from "@/app/api/events/[id]/route";
 import { getPostImageUrl } from "@/app/_libs/storage";
 import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { PageHeader } from "@/app/_components/PageHeader";
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import { MeResponse } from "@/app/api/me/route";
 import { formatDateTime, formatTime } from "@/app/_libs/format";
 import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
 
@@ -15,8 +13,6 @@ export default function Page() {
   const { id } = useParams();
   const { data, isLoading } = useApiSWR<EventShowResponse>(`/api/events/${id}`);
   const event = data?.event;
-  const { token } = useSupabaseSession();
-  const { data: me } = useApiSWR<MeResponse>("/api/me");
 
   if (isLoading)
     return (
