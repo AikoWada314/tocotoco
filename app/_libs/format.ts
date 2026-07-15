@@ -17,3 +17,10 @@ export function formatTimeAgo(date: Date | string) {
   if (hours < 24) return `${hours}時間前`;
   return `${Math.floor(hours / 24)}日前`;
 }
+
+// 時刻だけを返す関数
+export function formatTime(date: Date | string) {
+  const d = new Date(date);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(d.getHours())}:${p(d.getMinutes())}`;
+}

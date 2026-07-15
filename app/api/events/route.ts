@@ -1,3 +1,4 @@
+import { getAuthUser } from "@/app/_libs/auth";
 import { prisma } from "@/app/_libs/prisma";
 import { NextResponse, NextRequest } from "next/server";
 
@@ -8,6 +9,7 @@ export type EventsIndexResponse = {
     title: string;
     description: string | null;
     eventDate: Date;
+    eventEndDate: Date | null,
     place: string;
     lat: number;
     lng: number;
@@ -58,5 +60,82 @@ export const GET = async (request: NextRequest) => {
       { message: "予期せぬエラーが発生しました" },
       { status: 500 },
     );
+  }
+};
+
+//新規投稿
+export type CreateEventRequestBody = {
+  title: string;
+  eventDate: string;
+  eventEndDate?: string;
+  place: string;
+  organizerName: string;
+  organizerLink?: string;
+  description?: string;
+  imageUrl?: string;
+  lat: number;
+  lng: number;
+};
+
+// POSTという命名にすることで、POSTリクエストの時にこの関数が呼ばれる
+export const POST = async (request: NextRequest) => {
+  const authUser = await getAuthUser(request);
+  if (!authUser) {
+    return NextResponse.json(
+      { message: "ログインが必要です" },
+      { status: 401 },
+    );
+  }
+
+  try {
+    const body: CreateEventRequestBody = await request.json();
+    const {
+      title,
+      eventDate,
+      eventEndDate,
+      place,
+      organizerName,
+      organizerLink,
+      description,
+      lat,
+      lng,
+      imageUrl,
+    } = body;
+
+    const dbUser = await prisma.user.findUnique({
+      where: { supabaseUserId: authUser.id },
+    });
+    if (!dbUser) {
+      return NextResponse.json(
+        { message: "ユーザーが見つかりません" },
+        { status: 404 },
+      );
+    }
+
+    await prisma.event.create({
+      data: {
+        title,
+        eventDate: new Date(eventDate),
+        eventEndDate: eventEndDate ? new Date(eventEndDate) : undefined,
+        place,
+        organizerName,
+        organizerLink,
+        description,
+        lat,
+        lng,
+        createdBy: dbUser.id,
+        status: "published",
+        ...(imageUrl ? { images: { create: { imageUrl } } } : {}),
+      },
+    });
+
+    return NextResponse.json(
+      { message: "イベントを作成しました" },
+      { status: 201 },
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      return NextResponse.json({ message: error.message }, { status: 400 });
+    }
   }
 };

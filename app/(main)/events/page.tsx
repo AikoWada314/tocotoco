@@ -81,9 +81,26 @@ export default function EventPage() {
   return (
     <div className="flex flex-col flex-1 min-h-0 bg-white">
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6">
-        <h1 className="py-4 text-center text-[18px] font-bold text-[#0f172a]">
-          イベントカレンダー
-        </h1>
+        <div className="relative flex items-center justify-center py-4">
+          <h1 className="text-[18px] font-bold text-[#0f172a]">
+            イベントカレンダー
+          </h1>
+          <Link
+            href="/events/new"
+            aria-label="イベントを登録"
+            className="absolute right-0 flex items-center gap-1 rounded-full bg-[#3a7e69] px-3.5 py-2 text-[13px] font-bold text-white shadow-sm transition-opacity hover:opacity-90"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path
+                d="M7 1.5v11M1.5 7h11"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </svg>
+            登録
+          </Link>
+        </div>
 
         {/* カレンダー */}
         <Calendar
