@@ -6,14 +6,19 @@ import { useRouter } from "next/navigation";
 import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { supabase } from "@/app/_libs/supabase";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import { EventFormValues } from "@/app/(main)/events/_hooks/useEventForm";
-import { CreateEventRequestBody } from "@/app/api/events/route";
-import { useEventForm } from "@/app/(main)/events/_hooks/useEventForm";
+import { SpotFormValues } from "@/app/(main)/spots/_hooks/useSpotForm";
+import { CreateSpotRequestBody } from "@/app/api/spots/route";
+import { useSpotForm } from "@/app/(main)/spots/_hooks/useSpotForm";
+import { SpotCategories } from "@/app/api/spot-categories/route";
 import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
 
-export default function NewEventPage() {
+export default function NewSpotPage() {
   const router = useRouter();
   const { token } = useSupabaseSession();
+  const { data: categoryData } = useApiSWR<SpotCategories>(
+    "/api/spot-categories",
+  );
+  const categories = categoryData?.categories ?? [];
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,14 +28,18 @@ export default function NewEventPage() {
     handleSubmit,
     formState: { errors },
     setValue,
-  } = useEventForm();
+  } = useSpotForm();
 
   const lat = watch("lat");
   const lng = watch("lng");
 
-  const onSubmit = async (values: EventFormValues) => {
+  const onSubmit = async (values: SpotFormValues) => {
     if (values.lat == null || values.lng == null) {
       alert("地図をタップして場所を指定してください");
+      return;
+    }
+    if (values.categoryId == null) {
+      alert("カテゴリーを選択してください");
       return;
     }
 
@@ -50,22 +59,17 @@ export default function NewEventPage() {
         imageUrl = path;
       }
 
-      const body: CreateEventRequestBody = {
-        title: values.title,
-        eventDate: new Date(values.eventDate).toISOString(),
-        eventEndDate: values.eventEndDate
-          ? new Date(values.eventEndDate).toISOString()
-          : undefined,
-        place: values.place,
-        organizerName: values.organizerName,
-        organizerLink: values.organizerLink || undefined,
+      const body: CreateSpotRequestBody = {
+        name: values.name,
+        address: values.address,
+        categoryId: values.categoryId,
         description: values.description || undefined,
         lat: values.lat,
         lng: values.lng,
         imageUrls: imageUrl ? [imageUrl] : [],
       };
 
-      const res = await fetch("/api/events", {
+      const res = await fetch("/api/spots", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -74,12 +78,12 @@ export default function NewEventPage() {
         body: JSON.stringify(body),
       });
       if (!res.ok) {
-        throw new Error("イベント作成に失敗しました");
+        throw new Error("スポット作成に失敗しました");
       }
-      alert("イベントを作成しました。");
-      router.push("/events");
+      alert("スポットを作成しました。");
+      router.push("/spots");
     } catch {
-      alert("イベント作成に失敗しました");
+      alert("スポット作成に失敗しました");
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +120,7 @@ export default function NewEventPage() {
           </svg>
         </button>
         <h1 className="text-[18px] font-bold text-[#0f172a] tracking-[-0.45px]">
-          イベントを登録
+          スポットを登録
         </h1>
         <button
           disabled={isLoading}
@@ -132,59 +136,48 @@ export default function NewEventPage() {
           disabled={isLoading}
           className="flex flex-col gap-4 p-4 pb-28"
         >
-          {/* タイトル */}
+          {/* スポット名 */}
           <div className="flex flex-col gap-2">
             <p className="text-[14px] font-bold text-[#334155] leading-5">
-              イベント名
+              スポット名
             </p>
             <input
-              {...register("title")}
-              placeholder={"例：⚪︎⚪︎祭り"}
+              {...register("name")}
+              placeholder={"例：⚪︎⚪︎カフェ"}
               className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white px-4 text-[16px] text-[#0f172a] placeholder:text-[#6b7280] outline-none focus:border-[#3a7e69]"
             />
-            {errors.title && (
-              <p className="text-[12px] text-red-500">{errors.title.message}</p>
+            {errors.name && (
+              <p className="text-[12px] text-red-500">{errors.name.message}</p>
             )}
           </div>
 
-          {/* 開催日時 */}
+          {/* カテゴリー選択 */}
           <div className="flex flex-col gap-2">
             <p className="text-[14px] font-bold text-[#334155] leading-5">
-              開催日時
+              カテゴリー
             </p>
-            <input
-              type="datetime-local"
-              {...register("eventDate")}
-              className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white px-4 text-[16px] text-[#0f172a] outline-none focus:border-[#3a7e69]"
-            />
-            {errors.eventDate && (
-              <p className="text-[12px] text-red-500">
-                {errors.eventDate.message}
-              </p>
-            )}
+            <div className="flex gap-2 flex-wrap">
+              {categories.map((cat) => (
+                <button
+                  type="button"
+                  key={cat.id}
+                  onClick={() => setValue("categoryId", cat.id)}
+                  className={
+                    watch("categoryId") === cat.id
+                      ? "bg-[#3a7e69] text-white text-[13px] font-medium px-4 py-2 rounded-full"
+                      : "bg-[#eff9f5] border border-[rgba(58,126,105,0.2)] text-[#3a7e69] text-[13px] font-medium px-4 py-2 rounded-full"
+                  }
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* 終了日時 */}
+          {/* 住所 */}
           <div className="flex flex-col gap-2">
             <p className="text-[14px] font-bold text-[#334155] leading-5">
-              終了日時（任意）
-            </p>
-            <input
-              type="datetime-local"
-              {...register("eventEndDate")}
-              className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white px-4 text-[16px] text-[#0f172a] outline-none focus:border-[#3a7e69]"
-            />
-            {errors.eventEndDate && (
-              <p className="text-[12px] text-red-500">
-                {errors.eventEndDate.message}
-              </p>
-            )}
-          </div>
-
-          {/* 開催場所 */}
-          <div className="flex flex-col gap-2">
-            <p className="text-[14px] font-bold text-[#334155] leading-5">
-              開催場所
+              住所
             </p>
             <div className="relative">
               <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
@@ -196,13 +189,13 @@ export default function NewEventPage() {
                 </svg>
               </div>
               <input
-                {...register("place")}
-                placeholder="場所を入力"
+                {...register("address")}
+                placeholder="住所を入力"
                 className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white pl-10 pr-4 text-[16px] text-[#0f172a] placeholder:text-[#6b7280] outline-none focus:border-[#3a7e69]"
               />
-              {errors.place && (
+              {errors.address && (
                 <p className="text-[12px] text-red-500">
-                  {errors.place.message}
+                  {errors.address.message}
                 </p>
               )}
             </div>
@@ -230,16 +223,14 @@ export default function NewEventPage() {
             </div>
           </div>
 
-          {/* テキストエリア */}
+          {/* スポットについて */}
           <div className="flex flex-col gap-2">
             <p className="text-[14px] font-bold text-[#334155] leading-5">
-              イベントについて
+              スポットについて
             </p>
             <textarea
               {...register("description")}
-              placeholder={
-                "イベントの内容、持ち物、参加条件などを入力してください"
-              }
+              placeholder={"おすすめポイントや雰囲気などを入力してください"}
               className="h-[154px] w-full resize-none rounded-[12px] border border-[#d1e2dc] bg-white p-4 text-[16px] leading-6 text-[#0f172a] placeholder:text-[#6b7280] outline-none focus:border-[#3a7e69]"
             />
             {errors.description && (
@@ -306,44 +297,6 @@ export default function NewEventPage() {
                 </>
               )}
             </label>
-          </div>
-
-          {/* 主催者情報 */}
-          <div className="flex flex-col gap-2">
-            <p className="text-[14px] font-bold text-[#334155] leading-5">
-              主催者情報
-            </p>
-            <div className="flex flex-col gap-4 pl-4">
-              <div className="flex flex-col gap-2">
-                <p className="text-[14px] font-bold text-[#334155] leading-5">
-                  主催者名前
-                </p>
-                <input
-                  {...register("organizerName")}
-                  className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white px-4 text-[16px] text-[#0f172a] outline-none focus:border-[#3a7e69]"
-                />
-                {errors.organizerName && (
-                  <p className="text-[12px] text-red-500">
-                    {errors.organizerName.message}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col gap-2">
-                <p className="text-[14px] font-bold text-[#334155] leading-5">
-                  主催者情報リンク（WebサイトやInstagramなど）
-                </p>
-                <input
-                  type="url"
-                  {...register("organizerLink")}
-                  className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white px-4 text-[16px] text-[#0f172a] outline-none focus:border-[#3a7e69]"
-                />
-                {errors.organizerLink && (
-                  <p className="text-[12px] text-red-500">
-                    {errors.organizerLink.message}
-                  </p>
-                )}
-              </div>
-            </div>
           </div>
         </fieldset>
       </div>

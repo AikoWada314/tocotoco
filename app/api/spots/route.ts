@@ -2,26 +2,20 @@ import { getAuthUser } from "@/app/_libs/auth";
 import { prisma } from "@/app/_libs/prisma";
 import { NextResponse, NextRequest } from "next/server";
 
-//イベント一覧の型定義
-export type EventsIndexResponse = {
-  events: {
+//スポット一覧の型定義
+export type SpotsIndexResponse = {
+  spots: {
     id: number;
-    title: string;
+    name: string;
     description: string | null;
-    eventDate: Date;
-    eventEndDate: Date | null;
-    place: string;
     lat: number;
     lng: number;
-    organizerName: string;
-    organizerLink: string | null;
-    createdBy: number;
     status: string;
-    createdAt: Date;
-    updatedAt: Date;
+    address: string;
+    categoryId: number;
     images: {
       id: number;
-      eventId: number;
+      spotId: number;
       imageUrl: string;
       createdAt: Date;
       updatedAt: Date;
@@ -29,29 +23,15 @@ export type EventsIndexResponse = {
   }[];
 };
 
-//イベント一覧の取得
+//スポット一覧の取得
 export const GET = async (request: NextRequest) => {
   try {
-    const from = request.nextUrl.searchParams.get("from");
-    const to = request.nextUrl.searchParams.get("to");
-
-    // 期間指定(カレンダー用)があればその範囲、なければ今日以降(直近リスト用)
-    const where =
-      from && to
-        ? { eventDate: { gte: new Date(from), lte: new Date(to) } }
-        : { eventDate: { gte: new Date() } };
-
-    const events = await prisma.event.findMany({
-      where,
+    const spots = await prisma.spot.findMany({
       include: {
         images: true,
       },
-      orderBy: {
-        eventDate: "asc",
-      },
-      take: from && to ? undefined : 10, // 直近リストのときだけ10件に制限
     });
-    return NextResponse.json<EventsIndexResponse>({ events }, { status: 200 });
+    return NextResponse.json<SpotsIndexResponse>({ spots }, { status: 200 });
   } catch (error) {
     if (error instanceof Error) {
       return NextResponse.json({ message: error.message }, { status: 400 });
@@ -63,14 +43,11 @@ export const GET = async (request: NextRequest) => {
   }
 };
 
-//新規投稿
-export type CreateEventRequestBody = {
-  title: string;
-  eventDate: string;
-  eventEndDate?: string;
-  place: string;
-  organizerName: string;
-  organizerLink?: string;
+//新規スポット登録
+export type CreateSpotRequestBody = {
+  name: string;
+  address: string;
+  categoryId: number;
   description?: string;
   imageUrls?: string[];
   lat: number;
@@ -88,19 +65,8 @@ export const POST = async (request: NextRequest) => {
   }
 
   try {
-    const body: CreateEventRequestBody = await request.json();
-    const {
-      title,
-      eventDate,
-      eventEndDate,
-      place,
-      organizerName,
-      organizerLink,
-      description,
-      lat,
-      lng,
-      imageUrls,
-    } = body;
+    const body: CreateSpotRequestBody = await request.json();
+    const { name, address, categoryId, description, lat, lng, imageUrls } = body;
 
     const dbUser = await prisma.user.findUnique({
       where: { supabaseUserId: authUser.id },
@@ -112,14 +78,11 @@ export const POST = async (request: NextRequest) => {
       );
     }
 
-    await prisma.event.create({
+    await prisma.spot.create({
       data: {
-        title,
-        eventDate: new Date(eventDate),
-        eventEndDate: eventEndDate ? new Date(eventEndDate) : undefined,
-        place,
-        organizerName,
-        organizerLink,
+        name,
+        address,
+        categoryId,
         description,
         lat,
         lng,
@@ -132,7 +95,7 @@ export const POST = async (request: NextRequest) => {
     });
 
     return NextResponse.json(
-      { message: "イベントを作成しました" },
+      { message: "スポットを作成しました" },
       { status: 201 },
     );
   } catch (error) {
