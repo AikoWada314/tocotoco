@@ -10,7 +10,12 @@ import { SpotFormValues } from "@/app/(main)/spots/_hooks/useSpotForm";
 import { CreateSpotRequestBody } from "@/app/api/spots/route";
 import { useSpotForm } from "@/app/(main)/spots/_hooks/useSpotForm";
 import { SpotCategories } from "@/app/api/spot-categories/route";
-import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
+import {
+  APIProvider,
+  Map,
+  AdvancedMarker,
+} from "@vis.gl/react-google-maps";
+import { AddressAutocomplete } from "@/app/_components/AddressAutocomplete";
 
 export default function NewSpotPage() {
   const router = useRouter();
@@ -19,8 +24,8 @@ export default function NewSpotPage() {
     "/api/spot-categories",
   );
   const categories = categoryData?.categories ?? [];
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const {
     register,
@@ -45,19 +50,20 @@ export default function NewSpotPage() {
 
     setIsLoading(true);
     try {
-      // 画像が選択されていればStorageにアップロードして公開URLを取得
-      let imageUrl: string | undefined;
-      if (imageFile) {
-        const ext = imageFile.name.split(".").pop();
-        const path = `${crypto.randomUUID()}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from("post_images")
-          .upload(path, imageFile);
-        if (uploadError) {
-          throw new Error(uploadError.message);
-        }
-        imageUrl = path;
-      }
+      // 画像が選択されていれば全部アップロードしてURLの配列を作る
+      const imageUrls = await Promise.all(
+        imageFiles.map(async (file) => {
+          const ext = file.name.split(".").pop();
+          const path = `${crypto.randomUUID()}.${ext}`;
+          const { error: uploadError } = await supabase.storage
+            .from("post_images")
+            .upload(path, file);
+          if (uploadError) {
+            throw new Error(uploadError.message);
+          }
+          return path;
+        }),
+      );
 
       const body: CreateSpotRequestBody = {
         name: values.name,
@@ -66,7 +72,7 @@ export default function NewSpotPage() {
         description: values.description || undefined,
         lat: values.lat,
         lng: values.lng,
-        imageUrls: imageUrl ? [imageUrl] : [],
+        imageUrls,
       };
 
       const res = await fetch("/api/spots", {
@@ -90,10 +96,23 @@ export default function NewSpotPage() {
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    //Filelistを普通の配列に変換
+    const selected = Array.from(files);
+
+    //今ある分に追加して、先頭4枚だけ残す
+    const next = [...imageFiles, ...selected].slice(0, 4);
+
+    setImageFiles(next);
+    setImagePreviews(next.map((file) => URL.createObjectURL(file)));
+  };
+
+  const handleRemoveImage = (index: number) => {
+    // index番目を除いた新しい配列を作って更新する
+    setImageFiles(imageFiles.filter((_, i) => i !== index));
+    setImagePreviews(imagePreviews.filter((_, i) => i !== index));
   };
 
   return (
@@ -179,30 +198,23 @@ export default function NewSpotPage() {
             <p className="text-[14px] font-bold text-[#334155] leading-5">
               住所
             </p>
-            <div className="relative">
-              <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
-                <svg width="16" height="20" viewBox="0 0 16 20" fill="none">
-                  <path
-                    d="M8 0C3.58 0 0 3.58 0 8C0 13.25 7.05 19.42 7.35 19.68C7.72 20 8.28 20 8.65 19.68C8.95 19.42 16 13.25 16 8C16 3.58 12.42 0 8 0ZM8 11C6.34 11 5 9.66 5 8C5 6.34 6.34 5 8 5C9.66 5 11 6.34 11 8C11 9.66 9.66 11 8 11Z"
-                    fill="#3a7e69"
-                  />
-                </svg>
-              </div>
-              <input
-                {...register("address")}
-                placeholder="住所を入力"
-                className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white pl-10 pr-4 text-[16px] text-[#0f172a] placeholder:text-[#6b7280] outline-none focus:border-[#3a7e69]"
+            <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
+              {/* 場所名で検索 → 選ぶと住所・座標・ピンが自動で入る */}
+              <AddressAutocomplete
+                value={watch("address")}
+                onChange={(v) => setValue("address", v)}
+                onPlaceSelect={({ address, lat, lng }) => {
+                  setValue("address", address, { shouldValidate: true });
+                  setValue("lat", lat);
+                  setValue("lng", lng);
+                }}
               />
               {errors.address && (
                 <p className="text-[12px] text-red-500">
                   {errors.address.message}
                 </p>
               )}
-            </div>
-            <div className="h-[300px] overflow-hidden rounded-[12px] border border-[#d1e2dc]">
-              <APIProvider
-                apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
-              >
+              <div className="mt-2 h-[300px] overflow-hidden rounded-[12px] border border-[#d1e2dc]">
                 <Map
                   defaultCenter={{ lat: 34.8216, lng: 135.4289 }}
                   defaultZoom={15}
@@ -219,8 +231,8 @@ export default function NewSpotPage() {
                     <AdvancedMarker position={{ lat, lng }} />
                   )}
                 </Map>
-              </APIProvider>
-            </div>
+              </div>
+            </APIProvider>
           </div>
 
           {/* スポットについて */}
@@ -243,25 +255,50 @@ export default function NewSpotPage() {
           {/* 写真追加 */}
           <div className="flex flex-col gap-2">
             <p className="text-[14px] font-bold text-[#334155] leading-5">
-              写真を追加
+              写真を追加（4枚まで）
             </p>
-            <label className="w-24 h-24 flex flex-col items-center justify-center gap-1 bg-[rgba(239,249,245,0.2)] border-2 border-dashed border-[rgba(58,126,105,0.3)] rounded-[12px] cursor-pointer hover:bg-[rgba(239,249,245,0.4)] transition-colors">
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageChange}
-              />
-              {imagePreview ? (
-                <Image
-                  src={imagePreview}
-                  alt="preview"
-                  width={96}
-                  height={96}
-                  className="w-full h-full object-cover rounded-[10px]"
-                />
-              ) : (
-                <>
+            <div className="flex flex-wrap gap-2">
+              {/* 選択済みの画像プレビュー */}
+              {imagePreviews.map((preview, index) => (
+                <div
+                  key={preview}
+                  className="relative w-24 h-24 rounded-[12px] overflow-hidden"
+                >
+                  <Image
+                    src={preview}
+                    alt={`preview-${index + 1}`}
+                    fill
+                    sizes="96px"
+                    className="object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    aria-label="画像を削除"
+                    className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path
+                        d="M1 1l8 8M9 1l-8 8"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+
+              {/* 4枚未満のときだけ追加ボタンを表示 */}
+              {imagePreviews.length < 4 && (
+                <label className="w-24 h-24 flex flex-col items-center justify-center gap-1 bg-[rgba(239,249,245,0.2)] border-2 border-dashed border-[rgba(58,126,105,0.3)] rounded-[12px] cursor-pointer hover:bg-[rgba(239,249,245,0.4)] transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
                   <svg
                     width="28"
                     height="25"
@@ -294,9 +331,9 @@ export default function NewSpotPage() {
                   <span className="text-[10px] font-medium text-[#3a7e69]">
                     追加
                   </span>
-                </>
+                </label>
               )}
-            </label>
+            </div>
           </div>
         </fieldset>
       </div>
