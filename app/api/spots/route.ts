@@ -20,6 +20,9 @@ export type SpotsIndexResponse = {
       createdAt: Date;
       updatedAt: Date;
     }[];
+    reviews: {
+      rating: number;
+    }[];
   }[];
 };
 
@@ -29,6 +32,7 @@ export const GET = async (request: NextRequest) => {
     const spots = await prisma.spot.findMany({
       include: {
         images: true,
+        reviews: { select: { rating: true } },
       },
     });
     return NextResponse.json<SpotsIndexResponse>({ spots }, { status: 200 });
@@ -66,7 +70,8 @@ export const POST = async (request: NextRequest) => {
 
   try {
     const body: CreateSpotRequestBody = await request.json();
-    const { name, address, categoryId, description, lat, lng, imageUrls } = body;
+    const { name, address, categoryId, description, lat, lng, imageUrls } =
+      body;
 
     const dbUser = await prisma.user.findUnique({
       where: { supabaseUserId: authUser.id },
