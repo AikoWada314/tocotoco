@@ -9,7 +9,7 @@ import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { EventFormValues } from "@/app/(main)/events/_hooks/useEventForm";
 import { CreateEventRequestBody } from "@/app/api/events/route";
 import { useEventForm } from "@/app/(main)/events/_hooks/useEventForm";
-import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
+import { LocationField } from "@/app/_components/LocationField";
 
 export default function NewEventPage() {
   const router = useRouter();
@@ -186,48 +186,19 @@ export default function NewEventPage() {
             <p className="text-[14px] font-bold text-[#334155] leading-5">
               開催場所
             </p>
-            <div className="relative">
-              <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
-                <svg width="16" height="20" viewBox="0 0 16 20" fill="none">
-                  <path
-                    d="M8 0C3.58 0 0 3.58 0 8C0 13.25 7.05 19.42 7.35 19.68C7.72 20 8.28 20 8.65 19.68C8.95 19.42 16 13.25 16 8C16 3.58 12.42 0 8 0ZM8 11C6.34 11 5 9.66 5 8C5 6.34 6.34 5 8 5C9.66 5 11 6.34 11 8C11 9.66 9.66 11 8 11Z"
-                    fill="#3a7e69"
-                  />
-                </svg>
-              </div>
-              <input
-                {...register("place")}
-                placeholder="場所を入力"
-                className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white pl-10 pr-4 text-[16px] text-[#0f172a] placeholder:text-[#6b7280] outline-none focus:border-[#3a7e69]"
-              />
-              {errors.place && (
-                <p className="text-[12px] text-red-500">
-                  {errors.place.message}
-                </p>
-              )}
-            </div>
-            <div className="h-[300px] overflow-hidden rounded-[12px] border border-[#d1e2dc]">
-              <APIProvider
-                apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
-              >
-                <Map
-                  defaultCenter={{ lat: 34.8216, lng: 135.4289 }}
-                  defaultZoom={15}
-                  mapId="DEMO_MAP_ID"
-                  onClick={(e) => {
-                    const pos = e.detail.latLng; // クリック地点の座標
-                    if (pos) {
-                      setValue("lat", pos.lat);
-                      setValue("lng", pos.lng);
-                    }
-                  }}
-                >
-                  {lat != null && lng != null && (
-                    <AdvancedMarker position={{ lat, lng }} />
-                  )}
-                </Map>
-              </APIProvider>
-            </div>
+            <LocationField
+              address={watch("place")}
+              lat={lat}
+              lng={lng}
+              placeholder="場所を入力"
+              showPin
+              error={errors.place?.message}
+              onChange={(next) => {
+                setValue("place", next.address, { shouldValidate: true });
+                setValue("lat", next.lat);
+                setValue("lng", next.lng);
+              }}
+            />
           </div>
 
           {/* テキストエリア */}

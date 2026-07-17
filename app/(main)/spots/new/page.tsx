@@ -10,12 +10,7 @@ import { SpotFormValues } from "@/app/(main)/spots/_hooks/useSpotForm";
 import { CreateSpotRequestBody } from "@/app/api/spots/route";
 import { useSpotForm } from "@/app/(main)/spots/_hooks/useSpotForm";
 import { SpotCategories } from "@/app/api/spot-categories/route";
-import {
-  APIProvider,
-  Map,
-  AdvancedMarker,
-} from "@vis.gl/react-google-maps";
-import { AddressAutocomplete } from "@/app/_components/AddressAutocomplete";
+import { LocationField } from "@/app/_components/LocationField";
 
 export default function NewSpotPage() {
   const router = useRouter();
@@ -198,41 +193,18 @@ export default function NewSpotPage() {
             <p className="text-[14px] font-bold text-[#334155] leading-5">
               住所
             </p>
-            <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
-              {/* 場所名で検索 → 選ぶと住所・座標・ピンが自動で入る */}
-              <AddressAutocomplete
-                value={watch("address")}
-                onChange={(v) => setValue("address", v)}
-                onPlaceSelect={({ address, lat, lng }) => {
-                  setValue("address", address, { shouldValidate: true });
-                  setValue("lat", lat);
-                  setValue("lng", lng);
-                }}
-              />
-              {errors.address && (
-                <p className="text-[12px] text-red-500">
-                  {errors.address.message}
-                </p>
-              )}
-              <div className="mt-2 h-[300px] overflow-hidden rounded-[12px] border border-[#d1e2dc]">
-                <Map
-                  defaultCenter={{ lat: 34.8216, lng: 135.4289 }}
-                  defaultZoom={15}
-                  mapId="DEMO_MAP_ID"
-                  onClick={(e) => {
-                    const pos = e.detail.latLng; // クリック地点の座標
-                    if (pos) {
-                      setValue("lat", pos.lat);
-                      setValue("lng", pos.lng);
-                    }
-                  }}
-                >
-                  {lat != null && lng != null && (
-                    <AdvancedMarker position={{ lat, lng }} />
-                  )}
-                </Map>
-              </div>
-            </APIProvider>
+            <LocationField
+              address={watch("address")}
+              lat={lat}
+              lng={lng}
+              placeholder="場所名や住所で検索"
+              error={errors.address?.message}
+              onChange={(next) => {
+                setValue("address", next.address, { shouldValidate: true });
+                setValue("lat", next.lat);
+                setValue("lng", next.lng);
+              }}
+            />
           </div>
 
           {/* スポットについて */}
