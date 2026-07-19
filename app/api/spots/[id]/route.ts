@@ -1,55 +1,69 @@
 import { prisma } from "@/app/_libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
-//イベント詳細の型定義
-export type EventShowResponse = {
-  event: {
+//スポット詳細の型定義
+export type SpotShowResponse = {
+  spot: {
     id: number;
-    title: string;
+    name: string;
     description: string | null;
-    eventDate: Date;
-    eventEndDate: Date | null,
-    place: string;
+    address: string;
     lat: number;
     lng: number;
-    organizerName: string;
-    organizerLink: string | null;
-    createdBy: number;
-    status: string;
-    createdAt: Date;
-    updatedAt: Date;
+    categoryId: number;
     images: {
-      id: number;
-      eventId: number;
       imageUrl: string;
+    }[];
+    reviews: {
+      rating: number;
+      comment: string | null;
       createdAt: Date;
-      updatedAt: Date;
+      user: {
+        name: string;
+      };
     }[];
   };
 };
 
-//イベント詳細の取得
+//スポット詳細の取得
 export const GET = async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) => {
   const { id } = await params;
   try {
-    const event = await prisma.event.findUnique({
+    const spot = await prisma.spot.findUnique({
       where: {
         id: Number(id),
       },
-      include: {
-        images: true,
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        address: true,
+        lat: true,
+        lng: true,
+        categoryId: true,
+        images: {
+          select: { imageUrl: true },
+        },
+        reviews: {
+          select: {
+            rating: true,
+            comment: true,
+            createdAt: true,
+            user: { select: { name: true } },
+          },
+        },
       },
     });
-    if (!event) {
+    if (!spot) {
       return NextResponse.json(
-        { message: "イベントが見つかりません" },
+        { message: "スポットが見つかりません" },
         { status: 404 },
       );
     }
-    return NextResponse.json<EventShowResponse>({ event }, { status: 200 });
+    return NextResponse.json<SpotShowResponse>({ spot }, { status: 200 });
   } catch (error) {
     if (error instanceof Error) {
       return NextResponse.json({ message: error.message }, { status: 400 });
