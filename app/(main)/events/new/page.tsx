@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { supabase } from "@/app/_libs/supabase";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { EventFormValues } from "@/app/(main)/events/_hooks/useEventForm";
