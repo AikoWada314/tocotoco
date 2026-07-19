@@ -16,7 +16,7 @@ export const eventSchema = z.object({
     .or(z.literal("")),
   lat: z.number().nullable(),
   lng: z.number().nullable(),
-
+  images: z.array(z.instanceof(File)).max(4, "画像は4枚までです"),
   eventEndDate: z.string(),
 });
 
@@ -42,6 +42,7 @@ export const useEventForm = (
       description: "",
       lat: null,
       lng: null,
+      images: [],
       ...options?.defaultValues,
     },
   });

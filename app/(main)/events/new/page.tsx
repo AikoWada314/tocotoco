@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { supabase } from "@/app/_libs/supabase";
@@ -14,19 +14,45 @@ import { LocationField } from "@/app/_components/LocationField";
 export default function NewEventPage() {
   const router = useRouter();
   const { token } = useSupabaseSession();
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const {
     register,
     watch,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     setValue,
   } = useEventForm();
 
   const lat = watch("lat");
   const lng = watch("lng");
+
+  // 画像はフォームで一元管理。プレビューは images から都度作る（派生）
+  const images = watch("images");
+  const imagePreviews = useMemo(
+    () => images.map((file) => URL.createObjectURL(file)),
+    [images],
+  );
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    //Filelistを普通の配列に変換
+    const selected = Array.from(files);
+
+    //今ある分に追加して、先頭4枚だけ残す
+    const next = [...images, ...selected].slice(0, 4);
+
+    // フォームの images を更新すれば、プレビューは派生で自動追従する
+    setValue("images", next);
+  };
+
+  const handleRemoveImage = (index: number) => {
+    // index番目を除いた新しい配列を作って更新する
+    setValue(
+      "images",
+      images.filter((_, i) => i !== index),
+    );
+  };
 
   const onSubmit = async (values: EventFormValues) => {
     if (values.lat == null || values.lng == null) {
@@ -34,21 +60,21 @@ export default function NewEventPage() {
       return;
     }
 
-    setIsLoading(true);
     try {
-      // 画像が選択されていればStorageにアップロードして公開URLを取得
-      let imageUrl: string | undefined;
-      if (imageFile) {
-        const ext = imageFile.name.split(".").pop();
-        const path = `${crypto.randomUUID()}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from("post_images")
-          .upload(path, imageFile);
-        if (uploadError) {
-          throw new Error(uploadError.message);
-        }
-        imageUrl = path;
-      }
+      // 画像が選択されていれば全部アップロードしてURLの配列を作る
+      const imageUrls = await Promise.all(
+        values.images.map(async (file) => {
+          const ext = file.name.split(".").pop();
+          const path = `${crypto.randomUUID()}.${ext}`;
+          const { error: uploadError } = await supabase.storage
+            .from("post_images")
+            .upload(path, file);
+          if (uploadError) {
+            throw new Error(uploadError.message);
+          }
+          return path;
+        }),
+      );
 
       const body: CreateEventRequestBody = {
         title: values.title,
@@ -62,7 +88,7 @@ export default function NewEventPage() {
         description: values.description || undefined,
         lat: values.lat,
         lng: values.lng,
-        imageUrls: imageUrl ? [imageUrl] : [],
+        imageUrls,
       };
 
       const res = await fetch("/api/events", {
@@ -80,16 +106,7 @@ export default function NewEventPage() {
       router.push("/events");
     } catch {
       alert("イベント作成に失敗しました");
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
   };
 
   return (
@@ -119,17 +136,17 @@ export default function NewEventPage() {
           イベントを登録
         </h1>
         <button
-          disabled={isLoading}
+          disabled={isSubmitting}
           type="submit"
           className="bg-[#3a7e69] text-white text-[14px] font-bold px-4 py-1.5 rounded-full shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? "登録中..." : "登録する"}
+          {isSubmitting ? "登録中..." : "登録する"}
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto">
         <fieldset
-          disabled={isLoading}
+          disabled={isSubmitting}
           className="flex flex-col gap-4 p-4 pb-28"
         >
           {/* タイトル */}
@@ -223,25 +240,50 @@ export default function NewEventPage() {
           {/* 写真追加 */}
           <div className="flex flex-col gap-2">
             <p className="text-[14px] font-bold text-[#334155] leading-5">
-              写真を追加
+              写真を追加（4枚まで）
             </p>
-            <label className="w-24 h-24 flex flex-col items-center justify-center gap-1 bg-[rgba(239,249,245,0.2)] border-2 border-dashed border-[rgba(58,126,105,0.3)] rounded-[12px] cursor-pointer hover:bg-[rgba(239,249,245,0.4)] transition-colors">
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageChange}
-              />
-              {imagePreview ? (
-                <Image
-                  src={imagePreview}
-                  alt="preview"
-                  width={96}
-                  height={96}
-                  className="w-full h-full object-cover rounded-[10px]"
-                />
-              ) : (
-                <>
+            <div className="flex flex-wrap gap-2">
+              {/* 選択済みの画像プレビュー */}
+              {imagePreviews.map((preview, index) => (
+                <div
+                  key={preview}
+                  className="relative w-24 h-24 rounded-[12px] overflow-hidden"
+                >
+                  <Image
+                    src={preview}
+                    alt={`preview-${index + 1}`}
+                    fill
+                    sizes="96px"
+                    className="object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    aria-label="画像を削除"
+                    className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path
+                        d="M1 1l8 8M9 1l-8 8"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+
+              {/* 4枚未満のときだけ追加ボタンを表示 */}
+              {imagePreviews.length < 4 && (
+                <label className="w-24 h-24 flex flex-col items-center justify-center gap-1 bg-[rgba(239,249,245,0.2)] border-2 border-dashed border-[rgba(58,126,105,0.3)] rounded-[12px] cursor-pointer hover:bg-[rgba(239,249,245,0.4)] transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
                   <svg
                     width="28"
                     height="25"
@@ -274,9 +316,9 @@ export default function NewEventPage() {
                   <span className="text-[10px] font-medium text-[#3a7e69]">
                     追加
                   </span>
-                </>
+                </label>
               )}
-            </label>
+            </div>
           </div>
 
           {/* 主催者情報 */}
