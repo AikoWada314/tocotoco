@@ -7,24 +7,10 @@ export type EventsIndexResponse = {
   events: {
     id: number;
     title: string;
-    description: string | null;
     eventDate: Date;
-    eventEndDate: Date | null;
     place: string;
-    lat: number;
-    lng: number;
-    organizerName: string;
-    organizerLink: string | null;
-    createdBy: number;
-    status: string;
-    createdAt: Date;
-    updatedAt: Date;
     images: {
-      id: number;
-      eventId: number;
       imageUrl: string;
-      createdAt: Date;
-      updatedAt: Date;
     }[];
   }[];
 };
@@ -43,8 +29,14 @@ export const GET = async (request: NextRequest) => {
 
     const events = await prisma.event.findMany({
       where,
-      include: {
-        images: true,
+      select: {
+        id: true,
+        title: true,
+        place: true,
+        eventDate: true,
+        images: {
+          select: { imageUrl: true },
+        },
       },
       orderBy: {
         eventDate: "asc",

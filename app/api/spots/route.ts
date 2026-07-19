@@ -10,15 +10,9 @@ export type SpotsIndexResponse = {
     description: string | null;
     lat: number;
     lng: number;
-    status: string;
-    address: string;
     categoryId: number;
     images: {
-      id: number;
-      spotId: number;
       imageUrl: string;
-      createdAt: Date;
-      updatedAt: Date;
     }[];
     reviews: {
       rating: number;
@@ -30,9 +24,19 @@ export type SpotsIndexResponse = {
 export const GET = async (request: NextRequest) => {
   try {
     const spots = await prisma.spot.findMany({
-      include: {
-        images: true,
-        reviews: { select: { rating: true } },
+      select: {
+        id: true,
+        name: true,
+        lat: true,
+        lng: true,
+        categoryId: true,
+        description: true,
+        images: {
+          select: { imageUrl: true },
+        },
+        reviews: {
+          select: { rating: true },
+        },
       },
     });
     return NextResponse.json<SpotsIndexResponse>({ spots }, { status: 200 });

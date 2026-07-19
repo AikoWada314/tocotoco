@@ -8,22 +8,15 @@ export type EventShowResponse = {
     title: string;
     description: string | null;
     eventDate: Date;
-    eventEndDate: Date | null,
+    eventEndDate: Date | null;
     place: string;
     lat: number;
     lng: number;
     organizerName: string;
     organizerLink: string | null;
-    createdBy: number;
-    status: string;
-    createdAt: Date;
-    updatedAt: Date;
     images: {
       id: number;
-      eventId: number;
       imageUrl: string;
-      createdAt: Date;
-      updatedAt: Date;
     }[];
   };
 };
@@ -36,13 +29,24 @@ export const GET = async (
   const { id } = await params;
   try {
     const event = await prisma.event.findUnique({
-      where: {
-        id: Number(id),
-      },
-      include: {
-        images: true,
+      where: { id: Number(id) },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        eventDate: true,
+        eventEndDate: true,
+        place: true,
+        lat: true,
+        lng: true,
+        organizerName: true,
+        organizerLink: true,
+        images: {
+          select: { id: true, imageUrl: true }, // 画像も必要な2つだけ
+        },
       },
     });
+
     if (!event) {
       return NextResponse.json(
         { message: "イベントが見つかりません" },
