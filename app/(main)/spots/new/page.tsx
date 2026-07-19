@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { supabase } from "@/app/_libs/supabase";
@@ -19,19 +19,23 @@ export default function NewSpotPage() {
     "/api/spot-categories",
   );
   const categories = categoryData?.categories ?? [];
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const {
     register,
     watch,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     setValue,
   } = useSpotForm();
 
   const lat = watch("lat");
   const lng = watch("lng");
+
+  // 画像はフォームで一元管理。プレビューは images から都度作る（派生）
+  const images = watch("images");
+  const imagePreviews = useMemo(
+    () => images.map((file) => URL.createObjectURL(file)),
+    [images],
+  );
 
   const onSubmit = async (values: SpotFormValues) => {
     if (values.lat == null || values.lng == null) {
@@ -43,11 +47,10 @@ export default function NewSpotPage() {
       return;
     }
 
-    setIsLoading(true);
     try {
       // 画像が選択されていれば全部アップロードしてURLの配列を作る
       const imageUrls = await Promise.all(
-        imageFiles.map(async (file) => {
+        values.images.map(async (file) => {
           const ext = file.name.split(".").pop();
           const path = `${crypto.randomUUID()}.${ext}`;
           const { error: uploadError } = await supabase.storage
@@ -85,9 +88,7 @@ export default function NewSpotPage() {
       router.push("/spots");
     } catch {
       alert("スポット作成に失敗しました");
-    } finally {
-      setIsLoading(false);
-    }
+    } 
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,16 +99,18 @@ export default function NewSpotPage() {
     const selected = Array.from(files);
 
     //今ある分に追加して、先頭4枚だけ残す
-    const next = [...imageFiles, ...selected].slice(0, 4);
+    const next = [...images, ...selected].slice(0, 4);
 
-    setImageFiles(next);
-    setImagePreviews(next.map((file) => URL.createObjectURL(file)));
+    // フォームの images を更新すれば、プレビューは派生で自動追従する
+    setValue("images", next);
   };
 
   const handleRemoveImage = (index: number) => {
     // index番目を除いた新しい配列を作って更新する
-    setImageFiles(imageFiles.filter((_, i) => i !== index));
-    setImagePreviews(imagePreviews.filter((_, i) => i !== index));
+    setValue(
+      "images",
+      images.filter((_, i) => i !== index),
+    );
   };
 
   return (
@@ -137,17 +140,17 @@ export default function NewSpotPage() {
           スポットを登録
         </h1>
         <button
-          disabled={isLoading}
+          disabled={isSubmitting}
           type="submit"
           className="bg-[#3a7e69] text-white text-[14px] font-bold px-4 py-1.5 rounded-full shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? "登録中..." : "登録する"}
+          {isSubmitting ? "登録中..." : "登録する"}
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto">
         <fieldset
-          disabled={isLoading}
+          disabled={isSubmitting}
           className="flex flex-col gap-4 p-4 pb-28"
         >
           {/* スポット名 */}

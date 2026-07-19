@@ -11,6 +11,7 @@ export const spotSchema = z.object({
   address: z.string().min(1, "住所を入力してください"),
   lat: z.number().nullable(),
   lng: z.number().nullable(),
+  images: z.array(z.instanceof(File)).max(4, "画像は4枚までです"),
 });
 
 // この1行で「フォームの値の型」も自動生成される
@@ -32,6 +33,7 @@ export const useSpotForm = (
       address: "",
       lat: null,
       lng: null,
+      images: [],
       ...options?.defaultValues,
     },
   });
