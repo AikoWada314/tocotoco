@@ -20,7 +20,11 @@ export type SpotShowResponse = {
       createdAt: Date;
       user: {
         name: string;
+        iconUrl: string | null;
       };
+      images: {
+        imageUrl: string;
+      }[];
     }[];
   };
 };
@@ -52,7 +56,8 @@ export const GET = async (
             rating: true,
             comment: true,
             createdAt: true,
-            user: { select: { name: true } },
+            user: { select: { name: true, iconUrl: true } },
+            images: { select: { imageUrl: true } },
           },
         },
       },
