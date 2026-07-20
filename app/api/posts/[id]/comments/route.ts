@@ -5,7 +5,7 @@ import { getAuthUser } from "@/app/_libs/auth";
 //コメント新規投稿
 export type CreateCommentRequestBody = {
   content: string;
-  imageUrl?: string;
+  imageUrls?: string[];
 };
 
 // POSTという命名にすることで、POSTリクエストの時にこの関数が呼ばれる
@@ -24,7 +24,7 @@ export const POST = async (
 
   try {
     const body: CreateCommentRequestBody = await request.json();
-    const { content, imageUrl } = body;
+    const { content, imageUrls } = body;
 
     const dbUser = await prisma.user.findUnique({
       where: { supabaseUserId: authUser.id },
@@ -41,7 +41,9 @@ export const POST = async (
         content,
         userId: dbUser.id,
         postId: Number(id),
-        ...(imageUrl ? { imageUrl } : {}),
+        ...(imageUrls?.length
+          ? { images: { create: imageUrls.map((imageUrl) => ({ imageUrl })) } }
+          : {}),
       },
     });
 

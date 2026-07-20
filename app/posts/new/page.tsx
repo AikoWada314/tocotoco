@@ -54,7 +54,7 @@ export default function NewPostPage() {
       const body = {
         content: values.content,
         categoryId: values.categoryId,
-        imageUrl,
+        imageUrls: imageUrl ? [imageUrl] : [],
       } satisfies CreatePostRequestBody;
 
       const res = await fetch("/api/posts", {

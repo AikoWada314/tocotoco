@@ -3,23 +3,29 @@
 import Image from "next/image";
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { supabase } from "@/app/_libs/supabase";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import { EventFormValues } from "@/app/(main)/events/_hooks/useEventForm";
-import { CreateEventRequestBody } from "@/app/api/events/route";
-import { useEventForm } from "@/app/(main)/events/_hooks/useEventForm";
+import { SpotFormValues } from "@/app/(main)/spots/_hooks/useSpotForm";
+import { CreateSpotRequestBody } from "@/app/api/spots/route";
+import { useSpotForm } from "@/app/(main)/spots/_hooks/useSpotForm";
+import { SpotCategories } from "@/app/api/spot-categories/route";
 import { LocationField } from "@/app/_components/LocationField";
 
-export default function NewEventPage() {
+export default function NewSpotPage() {
   const router = useRouter();
   const { token } = useSupabaseSession();
+  const { data: categoryData } = useApiSWR<SpotCategories>(
+    "/api/spot-categories",
+  );
+  const categories = categoryData?.categories ?? [];
   const {
     register,
     watch,
     handleSubmit,
     formState: { errors, isSubmitting },
     setValue,
-  } = useEventForm();
+  } = useSpotForm();
 
   const lat = watch("lat");
   const lng = watch("lng");
@@ -30,6 +36,60 @@ export default function NewEventPage() {
     () => images.map((file) => URL.createObjectURL(file)),
     [images],
   );
+
+  const onSubmit = async (values: SpotFormValues) => {
+    if (values.lat == null || values.lng == null) {
+      alert("地図をタップして場所を指定してください");
+      return;
+    }
+    if (values.categoryId == null) {
+      alert("カテゴリーを選択してください");
+      return;
+    }
+
+    try {
+      // 画像が選択されていれば全部アップロードしてURLの配列を作る
+      const imageUrls = await Promise.all(
+        values.images.map(async (file) => {
+          const ext = file.name.split(".").pop();
+          const path = `${crypto.randomUUID()}.${ext}`;
+          const { error: uploadError } = await supabase.storage
+            .from("post_images")
+            .upload(path, file);
+          if (uploadError) {
+            throw new Error(uploadError.message);
+          }
+          return path;
+        }),
+      );
+
+      const body: CreateSpotRequestBody = {
+        name: values.name,
+        address: values.address,
+        categoryId: values.categoryId,
+        description: values.description || undefined,
+        lat: values.lat,
+        lng: values.lng,
+        imageUrls,
+      };
+
+      const res = await fetch("/api/spots", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ?? "",
+        },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        throw new Error("スポット作成に失敗しました");
+      }
+      alert("スポットを作成しました。");
+      router.push("/spots");
+    } catch {
+      alert("スポット作成に失敗しました");
+    } 
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -51,61 +111,6 @@ export default function NewEventPage() {
       "images",
       images.filter((_, i) => i !== index),
     );
-  };
-
-  const onSubmit = async (values: EventFormValues) => {
-    if (values.lat == null || values.lng == null) {
-      alert("地図をタップして場所を指定してください");
-      return;
-    }
-
-    try {
-      // 画像が選択されていれば全部アップロードしてURLの配列を作る
-      const imageUrls = await Promise.all(
-        values.images.map(async (file) => {
-          const ext = file.name.split(".").pop();
-          const path = `${crypto.randomUUID()}.${ext}`;
-          const { error: uploadError } = await supabase.storage
-            .from("post_images")
-            .upload(path, file);
-          if (uploadError) {
-            throw new Error(uploadError.message);
-          }
-          return path;
-        }),
-      );
-
-      const body: CreateEventRequestBody = {
-        title: values.title,
-        eventDate: new Date(values.eventDate).toISOString(),
-        eventEndDate: values.eventEndDate
-          ? new Date(values.eventEndDate).toISOString()
-          : undefined,
-        place: values.place,
-        organizerName: values.organizerName,
-        organizerLink: values.organizerLink || undefined,
-        description: values.description || undefined,
-        lat: values.lat,
-        lng: values.lng,
-        imageUrls,
-      };
-
-      const res = await fetch("/api/events", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ?? "",
-        },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        throw new Error("イベント作成に失敗しました");
-      }
-      alert("イベントを作成しました。");
-      router.push("/events");
-    } catch {
-      alert("イベント作成に失敗しました");
-    }
   };
 
   return (
@@ -132,7 +137,7 @@ export default function NewEventPage() {
           </svg>
         </button>
         <h1 className="text-[18px] font-bold text-[#0f172a] tracking-[-0.45px]">
-          イベントを登録
+          スポットを登録
         </h1>
         <button
           disabled={isSubmitting}
@@ -148,85 +153,71 @@ export default function NewEventPage() {
           disabled={isSubmitting}
           className="flex flex-col gap-4 p-4 pb-28"
         >
-          {/* タイトル */}
+          {/* スポット名 */}
           <div className="flex flex-col gap-2">
             <p className="text-[14px] font-bold text-[#334155] leading-5">
-              イベント名
+              スポット名
             </p>
             <input
-              {...register("title")}
-              placeholder={"例：⚪︎⚪︎祭り"}
+              {...register("name")}
+              placeholder={"例：⚪︎⚪︎カフェ"}
               className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white px-4 text-[16px] text-[#0f172a] placeholder:text-[#6b7280] outline-none focus:border-[#3a7e69]"
             />
-            {errors.title && (
-              <p className="text-[12px] text-red-500">{errors.title.message}</p>
+            {errors.name && (
+              <p className="text-[12px] text-red-500">{errors.name.message}</p>
             )}
           </div>
 
-          {/* 開催日時 */}
+          {/* カテゴリー選択 */}
           <div className="flex flex-col gap-2">
             <p className="text-[14px] font-bold text-[#334155] leading-5">
-              開催日時
+              カテゴリー
             </p>
-            <input
-              type="datetime-local"
-              {...register("eventDate")}
-              className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white px-4 text-[16px] text-[#0f172a] outline-none focus:border-[#3a7e69]"
-            />
-            {errors.eventDate && (
-              <p className="text-[12px] text-red-500">
-                {errors.eventDate.message}
-              </p>
-            )}
+            <div className="flex gap-2 flex-wrap">
+              {categories.map((cat) => (
+                <button
+                  type="button"
+                  key={cat.id}
+                  onClick={() => setValue("categoryId", cat.id)}
+                  className={
+                    watch("categoryId") === cat.id
+                      ? "bg-[#3a7e69] text-white text-[13px] font-medium px-4 py-2 rounded-full"
+                      : "bg-[#eff9f5] border border-[rgba(58,126,105,0.2)] text-[#3a7e69] text-[13px] font-medium px-4 py-2 rounded-full"
+                  }
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* 終了日時 */}
+          {/* 住所 */}
           <div className="flex flex-col gap-2">
             <p className="text-[14px] font-bold text-[#334155] leading-5">
-              終了日時（任意）
-            </p>
-            <input
-              type="datetime-local"
-              {...register("eventEndDate")}
-              className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white px-4 text-[16px] text-[#0f172a] outline-none focus:border-[#3a7e69]"
-            />
-            {errors.eventEndDate && (
-              <p className="text-[12px] text-red-500">
-                {errors.eventEndDate.message}
-              </p>
-            )}
-          </div>
-
-          {/* 開催場所 */}
-          <div className="flex flex-col gap-2">
-            <p className="text-[14px] font-bold text-[#334155] leading-5">
-              開催場所
+              住所
             </p>
             <LocationField
-              address={watch("place")}
+              address={watch("address")}
               lat={lat}
               lng={lng}
-              placeholder="場所を入力"
-              showPin
-              error={errors.place?.message}
+              placeholder="場所名や住所で検索"
+              error={errors.address?.message}
               onChange={(next) => {
-                setValue("place", next.address, { shouldValidate: true });
+                setValue("address", next.address, { shouldValidate: true });
                 setValue("lat", next.lat);
                 setValue("lng", next.lng);
               }}
             />
           </div>
 
-          {/* テキストエリア */}
+          {/* スポットについて */}
           <div className="flex flex-col gap-2">
             <p className="text-[14px] font-bold text-[#334155] leading-5">
-              イベントについて
+              スポットについて
             </p>
             <textarea
               {...register("description")}
-              placeholder={
-                "イベントの内容、持ち物、参加条件などを入力してください"
-              }
+              placeholder={"おすすめポイントや雰囲気などを入力してください"}
               className="h-[154px] w-full resize-none rounded-[12px] border border-[#d1e2dc] bg-white p-4 text-[16px] leading-6 text-[#0f172a] placeholder:text-[#6b7280] outline-none focus:border-[#3a7e69]"
             />
             {errors.description && (
@@ -317,44 +308,6 @@ export default function NewEventPage() {
                   </span>
                 </label>
               )}
-            </div>
-          </div>
-
-          {/* 主催者情報 */}
-          <div className="flex flex-col gap-2">
-            <p className="text-[14px] font-bold text-[#334155] leading-5">
-              主催者情報
-            </p>
-            <div className="flex flex-col gap-4 pl-4">
-              <div className="flex flex-col gap-2">
-                <p className="text-[14px] font-bold text-[#334155] leading-5">
-                  主催者名前
-                </p>
-                <input
-                  {...register("organizerName")}
-                  className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white px-4 text-[16px] text-[#0f172a] outline-none focus:border-[#3a7e69]"
-                />
-                {errors.organizerName && (
-                  <p className="text-[12px] text-red-500">
-                    {errors.organizerName.message}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col gap-2">
-                <p className="text-[14px] font-bold text-[#334155] leading-5">
-                  主催者情報リンク（WebサイトやInstagramなど）
-                </p>
-                <input
-                  type="url"
-                  {...register("organizerLink")}
-                  className="h-12 w-full rounded-[12px] border border-[#d1e2dc] bg-white px-4 text-[16px] text-[#0f172a] outline-none focus:border-[#3a7e69]"
-                />
-                {errors.organizerLink && (
-                  <p className="text-[12px] text-red-500">
-                    {errors.organizerLink.message}
-                  </p>
-                )}
-              </div>
             </div>
           </div>
         </fieldset>

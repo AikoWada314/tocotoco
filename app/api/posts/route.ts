@@ -88,7 +88,7 @@ export const GET = async () => {
 export type CreatePostRequestBody = {
   content: string;
   categoryId: number;
-  imageUrl?: string;
+  imageUrls?: string[];
 };
 
 // POSTという命名にすることで、POSTリクエストの時にこの関数が呼ばれる
@@ -103,7 +103,7 @@ export const POST = async (request: NextRequest) => {
 
   try {
     const body: CreatePostRequestBody = await request.json();
-    const { content, categoryId, imageUrl } = body;
+    const { content, categoryId, imageUrls } = body;
 
     const dbUser = await prisma.user.findUnique({
       where: { supabaseUserId: authUser.id },
@@ -121,8 +121,10 @@ export const POST = async (request: NextRequest) => {
         categoryId,
         userId: dbUser.id,
         isDraft: false,
-        ...(imageUrl ? { images: { create: { imageUrl } } } : {}),
-      },
+        ...(imageUrls?.length
+          ? { images: { create: imageUrls?.map((imageUrl) => ({ imageUrl}))}}
+          : {}),
+        },
     });
 
     return NextResponse.json({ message: "投稿を作成しました" }, { status: 201 });
