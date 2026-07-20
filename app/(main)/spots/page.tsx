@@ -111,7 +111,7 @@ export default function SpotPage() {
                 <button
                   type="button"
                   aria-label="お気に入り"
-                  className="shrink-0 text-[20px] leading-none text-[#cbd5e1]"
+                  className="relative z-10 shrink-0 text-[20px] leading-none text-[#cbd5e1]"
                 >
                   ♡
                 </button>
@@ -142,6 +142,13 @@ export default function SpotPage() {
                 </p>
               )}
             </div>
+
+            {/* カード全体を詳細ページへのリンクに（透明リンクを重ねる／♡はz-10で前面） */}
+            <Link
+              href={`/spots/${selected.id}`}
+              aria-label={`${selected.name} の詳細を見る`}
+              className="absolute inset-0 z-0 rounded-2xl"
+            />
           </div>
         )}
       </div>
