@@ -11,6 +11,7 @@ import { SpotShowResponse } from "@/app/api/spots/[id]/route";
 import { ReviewFormValues } from "@/app/(main)/spots/[id]/reviews/_hooks/useSpotReviewForm";
 import { CreateReviewRequestBody } from "@/app/api/spots/[id]/reviews/route";
 import { useSpotReviewForm } from "@/app/(main)/spots/[id]/reviews/_hooks/useSpotReviewForm";
+import { mutate } from "swr";
 
 export default function NewReviewPage() {
   const { id } = useParams();
@@ -70,6 +71,7 @@ export default function NewReviewPage() {
         throw new Error("口コミ投稿に失敗しました");
       }
       alert("口コミを投稿しました。");
+      await mutate(`/api/spots/${id}`);
       router.push(`/spots/${id}`);
     } catch {
       alert("口コミ投稿に失敗しました");
@@ -185,18 +187,26 @@ export default function NewReviewPage() {
                 <button
                   key={n}
                   type="button"
-                  onClick={() => setValue("rating", n, { shouldValidate: true })}
+                  onClick={() =>
+                    setValue("rating", n, { shouldValidate: true })
+                  }
                   aria-label={`${n}点`}
                   className="text-[36px] leading-none transition-transform hover:scale-110"
                 >
-                  <span className={n <= rating ? "text-[#3a7e69]" : "text-[#cbd5e1]"}>
+                  <span
+                    className={
+                      n <= rating ? "text-[#3a7e69]" : "text-[#cbd5e1]"
+                    }
+                  >
                     {n <= rating ? "★" : "☆"}
                   </span>
                 </button>
               ))}
             </div>
             {errors.rating && (
-              <p className="text-[12px] text-red-500">{errors.rating.message}</p>
+              <p className="text-[12px] text-red-500">
+                {errors.rating.message}
+              </p>
             )}
           </div>
 
@@ -294,7 +304,13 @@ export default function NewReviewPage() {
           <div className="flex flex-col gap-2 rounded-[12px] border border-[#3a7e69]/10 bg-[#eff9f5]/50 p-4">
             <div className="flex items-center gap-2">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="7" stroke="#3a7e69" strokeWidth="1.3" />
+                <circle
+                  cx="8"
+                  cy="8"
+                  r="7"
+                  stroke="#3a7e69"
+                  strokeWidth="1.3"
+                />
                 <path
                   d="M8 7.2v4M8 5.2h.01"
                   stroke="#3a7e69"
