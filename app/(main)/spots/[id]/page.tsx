@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { SpotShowResponse } from "@/app/api/spots/[id]/route";
 import { SpotCategories } from "@/app/api/spot-categories/route";
@@ -215,8 +216,8 @@ export default function Page() {
 
           {/* 口コミ投稿ボタン */}
           <div className="px-4">
-            <button
-              type="button"
+            <Link
+              href={`/spots/${id}/reviews/new`}
               className="flex w-full items-center justify-center gap-2 rounded-[12px] bg-[#3a7e69] py-4 text-[16px] font-bold text-white transition-opacity hover:opacity-90"
             >
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
@@ -229,7 +230,7 @@ export default function Page() {
                 />
               </svg>
               口コミを投稿する
-            </button>
+            </Link>
           </div>
         </article>
       </div>
