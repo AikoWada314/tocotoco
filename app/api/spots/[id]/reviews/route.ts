@@ -6,7 +6,7 @@ import { getAuthUser } from "@/app/_libs/auth";
 export type CreateReviewRequestBody = {
   rating: number;
   comment?: string;
-  imageUrls?: string[];
+  imageUrls: string[];
 };
 
 // POSTという命名にすることで、POSTリクエストの時にこの関数が呼ばれる
@@ -26,26 +26,13 @@ export const POST = async (
   try {
     const body: CreateReviewRequestBody = await request.json();
     const { rating, comment, imageUrls } = body;
-
-    const dbUser = await prisma.user.findUnique({
-      where: { supabaseUserId: authUser.id },
-    });
-    if (!dbUser) {
-      return NextResponse.json(
-        { message: "ユーザーが見つかりません" },
-        { status: 404 },
-      );
-    }
-
     await prisma.spotReview.create({
       data: {
         rating,
         comment,
-        userId: dbUser.id,
-        spotId: Number(id),
-        ...(imageUrls?.length
-          ? { images: { create: imageUrls.map((imageUrl) => ({ imageUrl })) } }
-          : {}),
+        user: { connect: { supabaseUserId: authUser.id } },
+        spot: { connect: { id: Number(id) } },
+        images: { create: imageUrls.map((imageUrl) => ({ imageUrl })) },
       },
     });
 
