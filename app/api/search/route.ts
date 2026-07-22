@@ -7,8 +7,9 @@ export type SearchResult = {
   id: number;
   title: string | null; // 名前/タイトルがある物だけ。無ければ null
   text: string | null; // 表示する本文
+  linkId: number;
 };
-type SearchResponse = { results: SearchResult[] };
+export type SearchResponse = { results: SearchResult[] };
 
 //検索結果の取得
 export const GET = async (request: NextRequest) => {
@@ -34,7 +35,7 @@ export const GET = async (request: NextRequest) => {
       }),
       prisma.postComment.findMany({
         where: { content: { contains: query, mode: "insensitive" } },
-        select: { id: true, content: true },
+        select: { id: true, content: true, postId: true },
         take: 20,
       }),
 
@@ -59,7 +60,7 @@ export const GET = async (request: NextRequest) => {
         where: {
           comment: { contains: query, mode: "insensitive" },
         },
-        select: { id: true, comment: true },
+        select: { id: true, comment: true, spotId: true },
         take: 20,
       }),
     ]);
@@ -69,30 +70,35 @@ export const GET = async (request: NextRequest) => {
       id: spot.id,
       title: spot.name,
       text: spot.description,
+      linkId: spot.id,
     }));
     const eventResults: SearchResult[] = events.map((event) => ({
       type: "event",
       id: event.id,
       title: event.title,
       text: event.description,
+      linkId: event.id,
     }));
     const postResults: SearchResult[] = posts.map((post) => ({
       type: "post",
       id: post.id,
       title: null,
       text: post.content,
+      linkId: post.id,
     }));
     const reviewResults: SearchResult[] = reviews.map((review) => ({
       type: "review",
       id: review.id,
       title: null,
       text: review.comment,
+      linkId: review.spotId,
     }));
     const commentResults: SearchResult[] = comments.map((comment) => ({
       type: "comment",
       id: comment.id,
       title: null,
       text: comment.content,
+      linkId: comment.postId,
     }));
 
     const results: SearchResult[] = [
