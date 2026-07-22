@@ -35,9 +35,11 @@ export default function PostPage() {
               strokeLinecap="round"
             />
           </svg>
-          <div className="bg-[#f8fafc] rounded-2xl pl-10 pr-4 py-2.5 text-[14px] text-[#64748b]">
-            つぶやき、スポット、イベントを検索
-          </div>
+          <Link href="/search">
+            <div className="bg-[#f1f5f9] rounded-[12px] pl-10 pr-4 py-2.5 text-[16px] text-[#64748b]">
+              つぶやき、スポット、イベントを検索
+            </div>
+          </Link>
         </div>
       </div>
 
