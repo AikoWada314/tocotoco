@@ -88,7 +88,7 @@ export const GET = async () => {
 export type CreatePostRequestBody = {
   content: string;
   categoryId: number;
-  imageUrls?: string[];
+  imageUrls: string[];
 };
 
 // POSTという命名にすることで、POSTリクエストの時にこの関数が呼ばれる
@@ -105,29 +105,20 @@ export const POST = async (request: NextRequest) => {
     const body: CreatePostRequestBody = await request.json();
     const { content, categoryId, imageUrls } = body;
 
-    const dbUser = await prisma.user.findUnique({
-      where: { supabaseUserId: authUser.id },
-    });
-    if (!dbUser) {
-      return NextResponse.json(
-        { message: "ユーザーが見つかりません" },
-        { status: 404 },
-      );
-    }
-
     await prisma.post.create({
       data: {
         content,
-        categoryId,
-        userId: dbUser.id,
+        category: { connect: { id: categoryId } },
+        user: { connect: { supabaseUserId: authUser.id } },
         isDraft: false,
-        ...(imageUrls?.length
-          ? { images: { create: imageUrls?.map((imageUrl) => ({ imageUrl}))}}
-          : {}),
-        },
+        images: { create: imageUrls.map((imageUrl) => ({ imageUrl })) },
+      },
     });
 
-    return NextResponse.json({ message: "投稿を作成しました" }, { status: 201 });
+    return NextResponse.json(
+      { message: "投稿を作成しました" },
+      { status: 201 },
+    );
   } catch (error) {
     if (error instanceof Error) {
       return NextResponse.json({ message: error.message }, { status: 400 });

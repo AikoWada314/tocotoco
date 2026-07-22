@@ -64,7 +64,7 @@ export type CreateEventRequestBody = {
   organizerName: string;
   organizerLink?: string;
   description?: string;
-  imageUrls?: string[];
+  imageUrls: string[];
   lat: number;
   lng: number;
 };
@@ -94,16 +94,6 @@ export const POST = async (request: NextRequest) => {
       imageUrls,
     } = body;
 
-    const dbUser = await prisma.user.findUnique({
-      where: { supabaseUserId: authUser.id },
-    });
-    if (!dbUser) {
-      return NextResponse.json(
-        { message: "ユーザーが見つかりません" },
-        { status: 404 },
-      );
-    }
-
     await prisma.event.create({
       data: {
         title,
@@ -115,11 +105,9 @@ export const POST = async (request: NextRequest) => {
         description,
         lat,
         lng,
-        createdBy: dbUser.id,
+        creator: { connect: { supabaseUserId: authUser.id } },
         status: "published",
-        ...(imageUrls?.length
-          ? { images: { create: imageUrls.map((imageUrl) => ({ imageUrl })) } }
-          : {}),
+        images: { create: imageUrls.map((imageUrl) => ({ imageUrl })) },
       },
     });
 
