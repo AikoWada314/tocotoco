@@ -57,7 +57,7 @@ export type CreateSpotRequestBody = {
   address: string;
   categoryId: number;
   description?: string;
-  imageUrls?: string[];
+  imageUrls: string[];
   lat: number;
   lng: number;
 };
@@ -76,30 +76,17 @@ export const POST = async (request: NextRequest) => {
     const body: CreateSpotRequestBody = await request.json();
     const { name, address, categoryId, description, lat, lng, imageUrls } =
       body;
-
-    const dbUser = await prisma.user.findUnique({
-      where: { supabaseUserId: authUser.id },
-    });
-    if (!dbUser) {
-      return NextResponse.json(
-        { message: "ユーザーが見つかりません" },
-        { status: 404 },
-      );
-    }
-
     await prisma.spot.create({
       data: {
         name,
         address,
-        categoryId,
+        category: { connect: { id: categoryId } },
         description,
         lat,
         lng,
-        createdBy: dbUser.id,
+        creator: { connect: { supabaseUserId: authUser.id } },
         status: "published",
-        ...(imageUrls?.length
-          ? { images: { create: imageUrls.map((imageUrl) => ({ imageUrl })) } }
-          : {}),
+        images: { create: imageUrls.map((imageUrl) => ({ imageUrl })) },
       },
     });
 
