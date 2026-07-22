@@ -46,6 +46,14 @@ export default function Page() {
       setIsSubmitting(false);
     }
   };
+  const handleLike = async () => {
+    if (!token) return;
+    await fetch(`/api/posts/${id}/likes`, {
+      method: "POST",
+      headers: { Authorization: token },
+    });
+    mutate(`/api/posts/${id}`);
+  };
 
   if (isLoading)
     return (
@@ -122,20 +130,28 @@ export default function Page() {
 
           {/* いいね・コメント数 */}
           <div className="border-t border-b border-[#f8fafc] flex gap-6 items-center px-4 py-[13px]">
-            <div className="flex gap-1.5 items-center">
+            <button
+              className="flex items-center gap-1.5"
+              onClick={handleLike}
+            >
               <svg width="18" height="17" viewBox="0 0 18 17" fill="none">
                 <path
                   d="M9 15.5C9 15.5 1.5 11 1.5 5.75C1.5 4.55653 1.97411 3.41193 2.81802 2.56802C3.66193 1.72411 4.80653 1.25 6 1.25C7.19347 1.25 8.33807 1.72411 9.18198 2.56802L9 2.75L8.81802 2.56802C9.66193 1.72411 10.8065 1.25 12 1.25C13.1935 1.25 14.3381 1.72411 15.182 2.56802C16.0259 3.41193 16.5 4.55653 16.5 5.75C16.5 11 9 15.5 9 15.5Z"
-                  stroke="#3a7e69"
+                  stroke="#ef4444"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  fill={
+                    post.likes.some((like) => like.userId === me?.user.id)
+                      ? "#ef4444"
+                      : "none"
+                  }
                 />
               </svg>
-              <span className="text-[14px] text-[#3a7e69]">
+              <span className="text-[14px] text-[#ef4444]">
                 {post.likes.length}
               </span>
-            </div>
+            </button>
             <div className="flex gap-1.5 items-center">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                 <path
