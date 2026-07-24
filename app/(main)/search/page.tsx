@@ -1,9 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useApiSWR } from "@/app/_hooks/useApiSWR";
+import { useApiSWRInfinite } from "@/app/_hooks/useApiSWRInfinite";
 import { SearchResponse } from "@/app/api/search/route";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+  useSearchForm,
+  SearchFormValues,
+} from "@/app/(main)/search/_hooks/useSearchForm";
 
 // タイプごとの遷移先とバッジ表示（口コミ→親スポット、コメント→親投稿に飛ぶ）
 const TYPE_META = {
@@ -35,25 +39,59 @@ const TYPE_META = {
 } as const;
 
 export default function SearchPage() {
-  const [text, setText] = useState("");
   const [query, setQuery] = useState("");
+  const { register, handleSubmit } = useSearchForm();
+  const onSubmit = (values: SearchFormValues) => {
+    setQuery(values.query.trim());
+  };
 
-  const { data, isLoading } = useApiSWR<SearchResponse>(
-    query ? `/api/search?query=${encodeURIComponent(query)}` : null,
+  // 各ページのURLを作る。次が無い/検索語が無いときはnullでfetchを止める
+  const getKey = (pageIndex: number, previousPageData: SearchResponse | null) => {
+    if (!query) return null; // 検索語が無ければ何も取らない
+    if (previousPageData && !previousPageData.hasMore) return null; // 前ページで打ち止め
+    return `/api/search?query=${encodeURIComponent(query)}&page=${pageIndex + 1}`;
+  };
+
+  const { data, isLoading, size, setSize } = useApiSWRInfinite<SearchResponse>(
+    getKey,
     { requireAuth: false },
   );
-  const results = data?.results ?? [];
+
+  // dataは[{results,hasMore}, ...]のページ配列。flatMapで1本に平す
+  const results = data?.flatMap((page) => page.results) ?? [];
+  // 最後に取得したページのhasMoreが「まだ続きがあるか」
+  const hasMore = data ? (data[data.length - 1]?.hasMore ?? false) : false;
+  // 2ページ目以降の読み込み中か（該当ページのdataがまだundefined）
+  const isLoadingMore = size > 0 && !!data && typeof data[size - 1] === "undefined";
+
+  // 検索語が変わったら1ページ目に戻す（前の検索のページ数を引きずらないため）
+  useEffect(() => {
+    setSize(1);
+  }, [query, setSize]);
+
+  // 一番下の見張り要素が見えたら次ページを読む（無限スクロール本体）
+  const loaderRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = loaderRef.current;
+    if (!el || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore) {
+          setSize((prev) => prev + 1);
+        }
+      },
+      { rootMargin: "200px" }, // 200px手前で先読み
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, setSize]);
 
   return (
     <div className="relative flex flex-col flex-1">
       {/* 検索バー */}
       <div className="bg-white border-b border-[#f1f5f9] px-4 py-3">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault(); // ページリロードを止める(formのデフォルト動作)
-            setQuery(text.trim()); // 入力中の文字を「確定」に昇格
-          }}
-        >
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="relative">
             <svg
               className="absolute left-[14.5px] top-1/2 -translate-y-1/2 pointer-events-none"
@@ -73,8 +111,7 @@ export default function SearchPage() {
             <input
               type="search"
               placeholder="つぶやき、スポット、イベントを検索"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
+              {...register("query")}
               className="w-full bg-[#f1f5f9] rounded-[12px] pl-10 pr-4 py-2.5 text-[16px] text-[#0f172a] placeholder:text-[#64748b] outline-none"
             />
           </div>
@@ -124,6 +161,20 @@ export default function SearchPage() {
             </li>
           ))}
         </ul>
+
+        {/* 無限スクロールの見張り要素。ここが見えたら次ページを読む */}
+        {hasMore && <div ref={loaderRef} className="h-1" />}
+
+        {isLoadingMore && (
+          <p className="py-4 text-center text-[14px] text-[#64748b]">
+            読み込み中...
+          </p>
+        )}
+        {query && !isLoading && !hasMore && results.length > 0 && (
+          <p className="py-4 text-center text-[12px] text-[#94a3b8]">
+            すべての検索結果を表示しました
+          </p>
+        )}
       </div>
     </div>
   );
