@@ -8,11 +8,27 @@ import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { PageHeader } from "@/app/_components/PageHeader";
 import { formatDateTime, formatTime } from "@/app/_libs/format";
 import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
+import { MeResponse } from "@/app/api/me/route";
+import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function Page() {
   const { id } = useParams();
-  const { data, isLoading } = useApiSWR<EventShowResponse>(`/api/events/${id}`);
+  const { data, isLoading, mutate } = useApiSWR<EventShowResponse>(
+    `/api/events/${id}`,
+  );
+  const { token } = useSupabaseSession();
+  const { data: me } = useApiSWR<MeResponse>("/api/me");
   const event = data?.event;
+
+  const toggleFavorite = async () => {
+    if (!token) return; // 未ログインなら何もしない
+    await fetch(`/api/events/${id}/favorites`, {
+      method: "POST",
+      headers: { Authorization: token },
+    });
+    mutate(); // 詳細を再取得して★を更新
+  };
 
   if (isLoading)
     return (
@@ -50,9 +66,19 @@ export default function Page() {
 
           {/* タイトル・基本情報 */}
           <div className="flex flex-col gap-3 px-4 pt-2 pb-4">
-            <h1 className="text-[24px] font-medium text-[#0f172a] leading-[30px] whitespace-pre-wrap">
-              {event.title}
-            </h1>
+            <div className="flex items-start justify-between gap-2">
+              <h1 className="text-[24px] font-medium text-[#0f172a] leading-[30px] whitespace-pre-wrap">
+                {event.title}
+              </h1>
+              {/* お気に入り（数は出さずマークのみ） */}
+              <FavoriteButton
+                active={event.favorites.some(
+                  (fav) => fav.userId === me?.user.id,
+                )}
+                onClick={toggleFavorite}
+                className="mt-1"
+              />
+            </div>
             <div className="flex flex-col gap-4 pt-1">
               <div className="flex items-center gap-4">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-[8px] bg-[#eff9f5]">

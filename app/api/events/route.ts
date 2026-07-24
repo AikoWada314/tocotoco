@@ -12,6 +12,9 @@ export type EventsIndexResponse = {
     images: {
       imageUrl: string;
     }[];
+    favorites: {
+      userId: number;
+    }[];
   }[];
 };
 
@@ -36,6 +39,9 @@ export const GET = async (request: NextRequest) => {
         eventDate: true,
         images: {
           select: { imageUrl: true },
+        },
+        favorites: {
+          select: { userId: true }, // お気に入り判定用
         },
       },
       orderBy: {

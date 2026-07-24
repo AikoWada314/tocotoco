@@ -10,15 +10,31 @@ import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { PageHeader } from "@/app/_components/PageHeader";
 import { formatTimeAgo } from "@/app/_libs/format";
 import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
+import { MeResponse } from "@/app/api/me/route";
+import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function Page() {
   const { id } = useParams();
-  const { data, isLoading } = useApiSWR<SpotShowResponse>(`/api/spots/${id}`);
+  const { data, isLoading, mutate } = useApiSWR<SpotShowResponse>(
+    `/api/spots/${id}`,
+  );
   const { data: categoryData } = useApiSWR<SpotCategories>(
     "/api/spot-categories",
   );
+  const { token } = useSupabaseSession();
+  const { data: me } = useApiSWR<MeResponse>("/api/me");
   const spot = data?.spot;
   const categories = categoryData?.categories ?? [];
+
+  const toggleFavorite = async () => {
+    if (!token) return; // 未ログインなら何もしない
+    await fetch(`/api/spots/${id}/favorites`, {
+      method: "POST",
+      headers: { Authorization: token },
+    });
+    mutate(); // 詳細を再取得して★を更新
+  };
 
   if (isLoading)
     return (
@@ -71,9 +87,19 @@ export default function Page() {
                 {categoryName}
               </span>
             )}
-            <h1 className="text-[24px] font-medium text-[#0f172a] leading-[30px] whitespace-pre-wrap">
-              {spot.name}
-            </h1>
+            <div className="flex items-start justify-between gap-2">
+              <h1 className="text-[24px] font-medium text-[#0f172a] leading-[30px] whitespace-pre-wrap">
+                {spot.name}
+              </h1>
+              {/* お気に入り（数は出さずマークのみ） */}
+              <FavoriteButton
+                active={spot.favorites.some(
+                  (fav) => fav.userId === me?.user.id,
+                )}
+                onClick={toggleFavorite}
+                className="mt-1"
+              />
+            </div>
 
             {/* 評価 */}
             <div className="flex items-center gap-1">
