@@ -17,6 +17,9 @@ export type SpotsIndexResponse = {
     reviews: {
       rating: number;
     }[];
+    favorites: {
+      userId: number;
+    }[];
   }[];
 };
 
@@ -36,6 +39,9 @@ export const GET = async (request: NextRequest) => {
         },
         reviews: {
           select: { rating: true },
+        },
+        favorites: {
+          select: { userId: true }, // お気に入り判定用（自分のIDと突き合わせる）
         },
       },
     });

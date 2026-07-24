@@ -18,6 +18,9 @@ export type EventShowResponse = {
       id: number;
       imageUrl: string;
     }[];
+    favorites: {
+      userId: number;
+    }[];
   };
 };
 
@@ -43,6 +46,9 @@ export const GET = async (
         organizerLink: true,
         images: {
           select: { id: true, imageUrl: true }, // 画像も必要な2つだけ
+        },
+        favorites: {
+          select: { userId: true }, // お気に入り判定用
         },
       },
     });

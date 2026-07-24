@@ -10,6 +10,9 @@ import { Calendar } from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "./calendar.css";
 import { useState } from "react";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
+import { MeResponse } from "@/app/api/me/route";
+import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 // Date → "2026-07-01" 形式の文字列に変換
 const formatYmd = (date: Date) => {
@@ -26,9 +29,25 @@ export default function EventPage() {
     () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   );
 
+  const { token } = useSupabaseSession();
+  const { data: me } = useApiSWR<MeResponse>("/api/me");
+
   // ① 直近のイベント一覧用（今日以降・近い順・最大10件）
-  const { data, isLoading } = useApiSWR<EventsIndexResponse>(`/api/events`);
+  const { data, isLoading, mutate } =
+    useApiSWR<EventsIndexResponse>(`/api/events`);
   const events = data?.events;
+
+  const toggleFavorite = async (e: React.MouseEvent, eventId: number) => {
+    e.preventDefault(); // カード全体のリンク遷移を止める
+    if (!token) return; // 未ログインなら何もしない
+    await fetch(`/api/events/${eventId}/favorites`, {
+      method: "POST",
+      headers: { Authorization: token },
+    });
+    // 直近リストと月別カレンダー用、両方のキャッシュを更新
+    mutate();
+    mutateMonth();
+  };
 
   // ② カレンダー用（表示中の月のイベント。タイムゾーンのずれ対策で前後1日広めに取る）
   const from = formatYmd(
@@ -37,9 +56,8 @@ export default function EventPage() {
   const to = formatYmd(
     new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1),
   );
-  const { data: monthData } = useApiSWR<EventsIndexResponse>(
-    `/api/events?from=${from}&to=${to}`,
-  );
+  const { data: monthData, mutate: mutateMonth } =
+    useApiSWR<EventsIndexResponse>(`/api/events?from=${from}&to=${to}`);
   const monthEvents = monthData?.events ?? [];
 
   if (isLoading)
@@ -142,8 +160,16 @@ export default function EventPage() {
             {filteredEvents.map((event) => (
               <li
                 key={event.id}
-                className="overflow-hidden rounded-[12px] border border-[#f1f5f9] bg-white transition-colors hover:border-[#e2e8f0] hover:bg-[#f8fafc]"
+                className="relative overflow-hidden rounded-[12px] border border-[#f1f5f9] bg-white transition-colors hover:border-[#e2e8f0] hover:bg-[#f8fafc]"
               >
+                {/* お気に入り（カード右上・数は出さずマークのみ） */}
+                <FavoriteButton
+                  active={event.favorites.some(
+                    (fav) => fav.userId === me?.user.id,
+                  )}
+                  onClick={(e) => toggleFavorite(e, event.id)}
+                  className="absolute right-2 top-2 z-10"
+                />
                 <Link href={`/events/${event.id}`} className="flex gap-3">
                   {/* 画像（なければグレーのプレースホルダー） */}
                   <div className="relative h-[100px] w-[100px] shrink-0 bg-[#f1f5f9]">

@@ -14,6 +14,7 @@ import {
   CommentFormValues,
 } from "@/app/posts/_hooks/useCommentForm";
 import { formatDateTime, formatTimeAgo } from "@/app/_libs/format";
+import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function Page() {
   const { id } = useParams();
@@ -48,6 +49,14 @@ export default function Page() {
   const toggleLike = async () => {
     if (!token) return;
     await fetch(`/api/posts/${id}/likes`, {
+      method: "POST",
+      headers: { Authorization: token },
+    });
+    mutate();
+  };
+  const toggleFavorite = async () => {
+    if (!token) return;
+    await fetch(`/api/posts/${id}/favorites`, {
       method: "POST",
       headers: { Authorization: token },
     });
@@ -165,6 +174,12 @@ export default function Page() {
                 {post.comments.length}
               </span>
             </div>
+
+            {/* お気に入り（数は出さずマークのみ） */}
+            <FavoriteButton
+              active={post.favorites.some((fav) => fav.userId === me?.user.id)}
+              onClick={toggleFavorite}
+            />
           </div>
         </article>
 

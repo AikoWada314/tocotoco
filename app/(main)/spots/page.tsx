@@ -8,17 +8,41 @@ import { SpotsIndexResponse } from "@/app/api/spots/route";
 import { SpotCategories } from "@/app/api/spot-categories/route";
 import { useState } from "react";
 import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
+import { MeResponse } from "@/app/api/me/route";
+import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function SpotPage() {
-  const { data, isLoading } = useApiSWR<SpotsIndexResponse>("/api/spots");
+  const { data, isLoading, mutate } = useApiSWR<SpotsIndexResponse>(
+    "/api/spots",
+  );
   const spots = data?.spots ?? [];
   const { data: categoryData } = useApiSWR<SpotCategories>(
     "/api/spot-categories",
   );
   const categories = categoryData?.categories ?? [];
+  const { token } = useSupabaseSession();
+  const { data: me } = useApiSWR<MeResponse>("/api/me");
   const [selected, setSelected] = useState<
     SpotsIndexResponse["spots"][number] | null
   >(null);
+
+  const toggleFavorite = async (e: React.MouseEvent, spotId: number) => {
+    e.preventDefault(); // カード全体のリンク遷移を止める
+    if (!token) return; // 未ログインなら何もしない
+    await fetch(`/api/spots/${spotId}/favorites`, {
+      method: "POST",
+      headers: { Authorization: token },
+    });
+    mutate(); // 一覧を再取得して★を更新
+  };
+
+  // selectedは選択時点のスナップショット。mutate後の最新のお気に入り状態は
+  // 最新のspotsから引き直す（selectedのfavoritesは古いままなので）
+  const selectedFavorites =
+    spots.find((s) => s.id === selected?.id)?.favorites ??
+    selected?.favorites ??
+    [];
 
   // 選択中スポットのカード用に、表示値を組み立てる
   const reviewCount = selected?.reviews.length ?? 0;
@@ -107,14 +131,14 @@ export default function SpotPage() {
                 <h3 className="truncate text-[18px] font-bold text-[#0f172a]">
                   {selected.name}
                 </h3>
-                {/* ♡ お気に入り（機能は今後実装） */}
-                <button
-                  type="button"
-                  aria-label="お気に入り"
-                  className="relative z-10 shrink-0 text-[20px] leading-none text-[#cbd5e1]"
-                >
-                  ♡
-                </button>
+                {/* お気に入り（数は出さずマークのみ） */}
+                <FavoriteButton
+                  active={selectedFavorites.some(
+                    (fav) => fav.userId === me?.user.id,
+                  )}
+                  onClick={(e) => toggleFavorite(e, selected.id)}
+                  className="relative z-10"
+                />
               </div>
 
               {/* 評価 */}

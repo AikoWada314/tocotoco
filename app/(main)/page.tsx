@@ -9,6 +9,7 @@ import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { getPostImageUrl } from "@/app/_libs/storage";
 import { formatTimeAgo } from "@/app/_libs/format";
 import { MeResponse } from "@/app/api/me/route";
+import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function PostPage() {
   const router = useRouter();
@@ -20,6 +21,16 @@ export default function PostPage() {
     e.preventDefault(); // 親Linkの遷移を止める
     if (!token) return; // 未ログインなら何もしない
     await fetch(`/api/posts/${postId}/likes`, {
+      method: "POST",
+      headers: { Authorization: token },
+    });
+    mutate(); // 一覧を再取得してハートと数を更新
+  };
+
+  const toggleFavorite = async (e: React.MouseEvent, postId: number) => {
+    e.preventDefault(); // 親Linkの遷移を止める
+    if (!token) return; // 未ログインなら何もしない
+    await fetch(`/api/posts/${postId}/favorites`, {
       method: "POST",
       headers: { Authorization: token },
     });
@@ -130,7 +141,7 @@ export default function PostPage() {
                             post.likes.some(
                               (like) => like.userId === me?.user.id,
                             )
-                              ? "#ef4444" 
+                              ? "#ef4444"
                               : "none"
                           }
                         />
@@ -139,7 +150,6 @@ export default function PostPage() {
                         {post.likes.length}
                       </span>
                     </button>
-
                     <button className="flex items-center gap-1.5">
                       <svg
                         width="18"
@@ -159,6 +169,13 @@ export default function PostPage() {
                         {post.comments.length}
                       </span>
                     </button>
+                    {/* お気に入り（数は出さずマークのみ） */}
+                    <FavoriteButton
+                      active={post.favorites.some(
+                        (fav) => fav.userId === me?.user.id,
+                      )}
+                      onClick={(e) => toggleFavorite(e, post.id)}
+                    />
                   </div>
                 </div>
               </div>

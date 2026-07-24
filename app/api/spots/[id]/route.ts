@@ -26,6 +26,9 @@ export type SpotShowResponse = {
         imageUrl: string;
       }[];
     }[];
+    favorites: {
+      userId: number;
+    }[];
   };
 };
 
@@ -59,6 +62,9 @@ export const GET = async (
             user: { select: { name: true, iconUrl: true } },
             images: { select: { imageUrl: true } },
           },
+        },
+        favorites: {
+          select: { userId: true }, // お気に入り判定用
         },
       },
     });
