@@ -13,12 +13,11 @@ import {
   useCommentForm,
   CommentFormValues,
 } from "@/app/posts/_hooks/useCommentForm";
-import { mutate } from "swr";
 import { formatDateTime, formatTimeAgo } from "@/app/_libs/format";
 
 export default function Page() {
   const { id } = useParams();
-  const { data, isLoading } = useApiSWR<PostShowResponse>(`/api/posts/${id}`);
+  const { data, isLoading, mutate } = useApiSWR<PostShowResponse>(`/api/posts/${id}`);
   const post = data?.post;
   const { token } = useSupabaseSession();
   const { data: me } = useApiSWR<MeResponse>("/api/me");
@@ -41,18 +40,18 @@ export default function Page() {
       }
 
       reset(); // 入力クリア（setCommentContent("") の代わり）
-      mutate(`/api/posts/${id}`);
+      mutate();
     } finally {
       setIsSubmitting(false);
     }
   };
-  const handleLike = async () => {
+  const toggleLike = async () => {
     if (!token) return;
     await fetch(`/api/posts/${id}/likes`, {
       method: "POST",
       headers: { Authorization: token },
     });
-    mutate(`/api/posts/${id}`);
+    mutate();
   };
 
   if (isLoading)
@@ -132,7 +131,7 @@ export default function Page() {
           <div className="border-t border-b border-[#f8fafc] flex gap-6 items-center px-4 py-[13px]">
             <button
               className="flex items-center gap-1.5"
-              onClick={handleLike}
+              onClick={toggleLike}
             >
               <svg width="18" height="17" viewBox="0 0 18 17" fill="none">
                 <path

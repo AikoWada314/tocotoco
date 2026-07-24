@@ -9,22 +9,21 @@ import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { getPostImageUrl } from "@/app/_libs/storage";
 import { formatTimeAgo } from "@/app/_libs/format";
 import { MeResponse } from "@/app/api/me/route";
-import { mutate } from "swr";
 
 export default function PostPage() {
   const router = useRouter();
-  const { data } = useApiSWR<PostsIndexResponse>("/api/posts");
+  const { data, mutate } = useApiSWR<PostsIndexResponse>("/api/posts");
   const posts = data?.posts ?? [];
   const { session, token } = useSupabaseSession();
   const { data: me } = useApiSWR<MeResponse>("/api/me");
-  const handleLike = async (e: React.MouseEvent, postId: number) => {
+  const toggleLike = async (e: React.MouseEvent, postId: number) => {
     e.preventDefault(); // 親Linkの遷移を止める
     if (!token) return; // 未ログインなら何もしない
     await fetch(`/api/posts/${postId}/likes`, {
       method: "POST",
       headers: { Authorization: token },
     });
-    mutate("/api/posts"); // 一覧を再取得してハートと数を更新
+    mutate(); // 一覧を再取得してハートと数を更新
   };
 
   return (
@@ -110,7 +109,7 @@ export default function PostPage() {
                     <button
                       className="flex items-center gap-1.5"
                       onClick={(e) => {
-                        handleLike(e, post.id);
+                        toggleLike(e, post.id);
                       }}
                     >
                       <svg

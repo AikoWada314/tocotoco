@@ -40,10 +40,10 @@ export const useApiSWR = <T = any>(
   // 認証が必要な場合はtokenが存在するまで待つ、不要な場合は即座にフェッチ
   const shouldFetch = requireAuth ? url && token : url;
 
-  const { data, error, isLoading } = useSWR<T>(
+  const { data, error, isLoading, mutate } = useSWR<T>(
     shouldFetch ? url : null,
     fetcher,
   );
 
-  return { data, error, isLoading };
+  return { data, error, isLoading, mutate };
 };
