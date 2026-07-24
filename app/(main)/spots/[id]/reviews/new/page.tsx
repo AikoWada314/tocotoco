@@ -11,7 +11,6 @@ import { SpotShowResponse } from "@/app/api/spots/[id]/route";
 import { ReviewFormValues } from "@/app/(main)/spots/[id]/reviews/_hooks/useSpotReviewForm";
 import { CreateReviewRequestBody } from "@/app/api/spots/[id]/reviews/route";
 import { useSpotReviewForm } from "@/app/(main)/spots/[id]/reviews/_hooks/useSpotReviewForm";
-import { mutate } from "swr";
 
 export default function NewReviewPage() {
   const { id } = useParams();
@@ -26,7 +25,9 @@ export default function NewReviewPage() {
   } = useSpotReviewForm();
 
   // 上部カード用に、対象スポットの情報を取得（詳細ページと同じ取得）
-  const { data: spotData } = useApiSWR<SpotShowResponse>(`/api/spots/${id}`);
+  const { data: spotData, mutate } = useApiSWR<SpotShowResponse>(
+    `/api/spots/${id}`,
+  );
   const spot = spotData?.spot;
 
   const rating = watch("rating");
@@ -71,7 +72,7 @@ export default function NewReviewPage() {
         throw new Error("口コミ投稿に失敗しました");
       }
       alert("口コミを投稿しました。");
-      await mutate(`/api/spots/${id}`);
+      await mutate();
       router.push(`/spots/${id}`);
     } catch {
       alert("口コミ投稿に失敗しました");

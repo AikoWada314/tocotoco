@@ -8,12 +8,23 @@ import { PostsIndexResponse } from "@/app/api/posts/route";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { getPostImageUrl } from "@/app/_libs/storage";
 import { formatTimeAgo } from "@/app/_libs/format";
+import { MeResponse } from "@/app/api/me/route";
 
 export default function PostPage() {
   const router = useRouter();
-  const { data } = useApiSWR<PostsIndexResponse>("/api/posts");
+  const { data, mutate } = useApiSWR<PostsIndexResponse>("/api/posts");
   const posts = data?.posts ?? [];
-  const { session } = useSupabaseSession();
+  const { session, token } = useSupabaseSession();
+  const { data: me } = useApiSWR<MeResponse>("/api/me");
+  const toggleLike = async (e: React.MouseEvent, postId: number) => {
+    e.preventDefault(); // 親Linkの遷移を止める
+    if (!token) return; // 未ログインなら何もしない
+    await fetch(`/api/posts/${postId}/likes`, {
+      method: "POST",
+      headers: { Authorization: token },
+    });
+    mutate(); // 一覧を再取得してハートと数を更新
+  };
 
   return (
     <div className="relative flex flex-col flex-1">
@@ -97,7 +108,12 @@ export default function PostPage() {
 
                   {/* いいね・コメント数 */}
                   <div className="flex items-center gap-6 mt-1">
-                    <button className="flex items-center gap-1.5">
+                    <button
+                      className="flex items-center gap-1.5"
+                      onClick={(e) => {
+                        toggleLike(e, post.id);
+                      }}
+                    >
                       <svg
                         width="18"
                         height="17"
@@ -106,13 +122,20 @@ export default function PostPage() {
                       >
                         <path
                           d="M9 15.5C9 15.5 1.5 11 1.5 5.75C1.5 4.55653 1.97411 3.41193 2.81802 2.56802C3.66193 1.72411 4.80653 1.25 6 1.25C7.19347 1.25 8.33807 1.72411 9.18198 2.56802L9 2.75L8.81802 2.56802C9.66193 1.72411 10.8065 1.25 12 1.25C13.1935 1.25 14.3381 1.72411 15.182 2.56802C16.0259 3.41193 16.5 4.55653 16.5 5.75C16.5 11 9 15.5 9 15.5Z"
-                          stroke="#3a7e69"
+                          stroke="#ef4444"
                           strokeWidth="1.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
+                          fill={
+                            post.likes.some(
+                              (like) => like.userId === me?.user.id,
+                            )
+                              ? "#ef4444" 
+                              : "none"
+                          }
                         />
                       </svg>
-                      <span className="text-[14px] text-[#3a7e69]">
+                      <span className="text-[14px] text-[#ef4444]">
                         {post.likes.length}
                       </span>
                     </button>
