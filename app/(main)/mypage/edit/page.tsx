@@ -119,10 +119,10 @@ export default function Page() {
           />
         </div>
 
-        {/* ニックネーム */}
+        {/* ユーザーネーム */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[13px] font-medium text-[#64748b]">
-            ニックネーム
+            ユーザーネーム
           </label>
           <input
             {...register("nickname")}
