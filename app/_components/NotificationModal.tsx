@@ -1,17 +1,27 @@
-"use client"
+"use client";
 
-import Modal from 'react-modal'
-import { CloseIcon } from './icons/CloseIcon'
-import { BellIcon } from './icons/BellIcon'
+import Modal from "react-modal";
+import { CloseIcon } from "./icons/CloseIcon";
+import { BellIcon } from "./icons/BellIcon";
+import { useApiSWR } from "../_hooks/useApiSWR";
+import { MyNotificationsResponse } from "@/app/api/me/notifications/route";
 
-type Props = {
-  isOpen: boolean
-  onClose: () => void
-}
+type NotificationModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+};
 
-Modal.setAppElement('body')
+Modal.setAppElement("body");
 
-export const NotificationModal = ({ isOpen, onClose }: Props) => {
+export const NotificationModal = ({
+  isOpen,
+  onClose,
+}: NotificationModalProps) => {
+  const { data } = useApiSWR<MyNotificationsResponse>(
+    isOpen ? "/api/me/notifications" : null,
+  );
+  const notifications = data?.notifications ?? [];
+
   return (
     <Modal
       isOpen={isOpen}
@@ -32,11 +42,31 @@ export const NotificationModal = ({ isOpen, onClose }: Props) => {
 
       {/* 通知リスト */}
       <div className="max-h-[400px] overflow-y-auto">
-        <div className="flex flex-col items-center justify-center py-12 text-[#94a3b8] text-sm gap-2">
-          <BellIcon />
-          <p>通知はありません</p>
-        </div>
+        {notifications.length === 0 ? (
+          // 0件のときだけ中央寄せ＋🔔
+          <div className="flex flex-col items-center justify-center py-12 text-[#94a3b8] text-sm gap-2">
+            <BellIcon />
+            <p>通知はありません</p>
+          </div>
+        ) : (
+          // 1件以上：一覧（未読は薄い緑背景で強調）
+          notifications.map((n) => (
+            <div
+              key={n.id}
+              className={`w-full px-5 py-4 border-b border-[#f1f5f9] ${
+                n.isRead ? "" : "bg-[#eff9f5]"
+              }`}
+            >
+              <p className="text-[13px] font-bold text-[#334155]">
+                {n.notification.title}
+              </p>
+              <p className="mt-0.5 text-[14px] text-[#334155]">
+                {n.notification.content}
+              </p>
+            </div>
+          ))
+        )}
       </div>
     </Modal>
-  )
-}
+  );
+};
