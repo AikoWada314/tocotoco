@@ -24,7 +24,7 @@ export default function Page() {
     register,
     handleSubmit,
     reset,
-    formState: { isSubmitting },
+    formState: { isSubmitting, errors },
   } = useProfileForm();
   const [file, setFile] = useState<File | null>(null);
 
@@ -117,6 +117,9 @@ export default function Page() {
             {...register("name")}
             className="rounded-[10px] border border-[#e2e8f0] px-3 py-2.5 text-[15px] text-[#0f172a] outline-none focus:border-[#3a7e69]"
           />
+          {errors.name && (
+            <p className="text-[12px] text-[#ef4444]">{errors.name.message}</p>
+          )}
         </div>
 
         {/* ユーザーネーム */}
@@ -128,6 +131,11 @@ export default function Page() {
             {...register("nickname")}
             className="rounded-[10px] border border-[#e2e8f0] px-3 py-2.5 text-[15px] text-[#0f172a] outline-none focus:border-[#3a7e69]"
           />
+          {errors.nickname && (
+            <p className="text-[12px] text-[#ef4444]">
+              {errors.nickname.message}
+            </p>
+          )}
         </div>
 
         {/* 保存 */}
