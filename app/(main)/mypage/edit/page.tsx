@@ -4,11 +4,12 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useApiSWR } from "@/app/_hooks/useApiSWR";
-import { MeResponse } from "@/app/api/me/route";
+import { MeResponse, UpdateMeRequestBody } from "@/app/api/me/route";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { supabase } from "@/app/_libs/supabase";
 import { getPostImageUrl } from "@/app/_libs/storage";
 import { PageHeader } from "@/app/_components/PageHeader";
+
 import {
   useProfileForm,
   ProfileFormValues,
@@ -59,17 +60,19 @@ export default function Page() {
         iconUrl = getPostImageUrl(path);
       }
 
+      const body: UpdateMeRequestBody = {
+        name: values.name,
+        nickname: values.nickname,
+        iconUrl,
+      };
+
       const res = await fetch("/api/me", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: token ?? "",
         },
-        body: JSON.stringify({
-          name: values.name,
-          nickname: values.nickname,
-          iconUrl,
-        }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error("更新に失敗しました");
 
