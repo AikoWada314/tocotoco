@@ -43,14 +43,14 @@ export const Header: React.FC = () => {
                     <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500" />
                   )}
                 </button>
+                <Link href="/mypage">
 
-                <Link href="/profile">
                   <Image
                     src={me?.user?.iconUrl || "/user.svg"}
                     alt="user icon"
                     width={32}
                     height={32}
-                    className="rounded-full"
+                    className="h-8 w-8 rounded-full object-cover"
                     priority
                   />
                 </Link>
