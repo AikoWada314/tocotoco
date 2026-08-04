@@ -32,13 +32,13 @@ export const Header: React.FC = () => {
                 >
                   <BellIcon />
                 </button>
-                <Link href="/profile">
+                <Link href="/mypage">
                   <Image
                     src={me?.user?.iconUrl || '/user.svg'}
                     alt="user icon"
                     width={32}
                     height={32}
-                    className="rounded-full"
+                    className="h-8 w-8 rounded-full object-cover"
                     priority
                   />
                 </Link>
