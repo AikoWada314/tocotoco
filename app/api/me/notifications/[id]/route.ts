@@ -16,10 +16,18 @@ export const PATCH = async (
     );
 
   try {
-    await prisma.userNotification.update({
-      where: { id: Number(id) }, // どの UserNotification を
+    const result = await prisma.userNotification.updateMany({
+      where: { id: Number(id), user: { supabaseUserId: authUser.id } }, // どの UserNotification を
       data: { isRead: true }, // 既読にする
+      
     });
+    // 自分の通知でなければ1件も更新されない（count が 0）
+    if (result.count === 0) {
+      return NextResponse.json(
+        { message: "対象が見つかりません" },
+        { status: 404 },
+      );
+    }
     return NextResponse.json({ isRead: true }, { status: 200 });
   } catch (error) {
     if (error instanceof Error) {
