@@ -5,6 +5,7 @@ import { CloseIcon } from "./icons/CloseIcon";
 import { BellIcon } from "./icons/BellIcon";
 import { useApiSWR } from "../_hooks/useApiSWR";
 import { MyNotificationsResponse } from "@/app/api/me/notifications/route";
+import { useSupabaseSession } from "../_hooks/useSupabaseSession";
 
 type NotificationModalProps = {
   isOpen: boolean;
@@ -17,10 +18,19 @@ export const NotificationModal = ({
   isOpen,
   onClose,
 }: NotificationModalProps) => {
-  const { data } = useApiSWR<MyNotificationsResponse>(
+  const { data, mutate } = useApiSWR<MyNotificationsResponse>(
     isOpen ? "/api/me/notifications" : null,
   );
   const notifications = data?.notifications ?? [];
+  const { token } = useSupabaseSession();
+
+  const markAsRead = async (id: number) => {
+    await fetch(`/api/me/notifications/${id}`, {
+      method: "PATCH",
+      headers: { Authorization: token ?? "" },
+    });
+    mutate(); // 一覧を取り直して isRead を反映（未読ハイライトが消える）
+  };
 
   return (
     <Modal
@@ -53,7 +63,10 @@ export const NotificationModal = ({
           notifications.map((n) => (
             <div
               key={n.id}
-              className={`w-full px-5 py-4 border-b border-[#f1f5f9] ${
+              onClick={() => {
+                if (!n.isRead) markAsRead(n.id);
+              }}
+              className={`w-full cursor-pointer px-5 py-4 border-b border-[#f1f5f9] ${
                 n.isRead ? "" : "bg-[#eff9f5]"
               }`}
             >
