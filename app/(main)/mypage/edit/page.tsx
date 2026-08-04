@@ -109,6 +109,7 @@ export default function Page() {
               accept="image/*"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               className="hidden"
+              disabled={isSubmitting}
             />
           </label>
         </div>
@@ -117,6 +118,7 @@ export default function Page() {
         <div className="flex flex-col gap-1.5">
           <label className="text-[13px] font-medium text-[#64748b]">名前</label>
           <input
+            disabled={isSubmitting}
             {...register("name")}
             className="rounded-[10px] border border-[#e2e8f0] px-3 py-2.5 text-[15px] text-[#0f172a] outline-none focus:border-[#3a7e69]"
           />
@@ -131,6 +133,7 @@ export default function Page() {
             ユーザーネーム
           </label>
           <input
+            disabled={isSubmitting}
             {...register("nickname")}
             className="rounded-[10px] border border-[#e2e8f0] px-3 py-2.5 text-[15px] text-[#0f172a] outline-none focus:border-[#3a7e69]"
           />
