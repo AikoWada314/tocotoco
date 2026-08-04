@@ -25,11 +25,16 @@ export const NotificationModal = ({
   const { token } = useSupabaseSession();
 
   const markAsRead = async (id: number) => {
-    await fetch(`/api/me/notifications/${id}`, {
-      method: "PATCH",
-      headers: { Authorization: token ?? "" },
-    });
-    mutate(); // 一覧を取り直して isRead を反映（未読ハイライトが消える）
+    try {
+      const res = await fetch(`/api/me/notifications/${id}`, {
+        method: "PATCH",
+        headers: { Authorization: token ?? "" },
+      });
+      if (!res.ok) throw new Error("既読処理に失敗しました");
+      mutate(); // 一覧を取り直して isRead を反映（未読ハイライトが消える）
+    } catch (error) {
+      console.error("通知の更新に失敗", error);
+    }
   };
 
   return (
