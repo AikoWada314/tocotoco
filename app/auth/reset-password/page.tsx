@@ -70,6 +70,7 @@ export default function ResetPasswordPage() {
               </div>
               <input
                 id="password"
+                disabled={isSubmitting}
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 className="bg-[#f8fafc] border border-[#e2e8f0] rounded-[8px] pl-12 pr-12 py-4 w-full text-[16px] text-[#6b7280] placeholder:text-[#6b7280] outline-none focus:border-[#3a7e69]"
