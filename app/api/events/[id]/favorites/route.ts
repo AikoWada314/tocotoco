@@ -1,6 +1,7 @@
 import { prisma } from "@/app/_libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/app/_libs/auth";
+import { createNotification } from "@/app/_libs/notification";
 
 // POSTで呼ばれる。押すたびにお気に入り登録/解除を切り替えるトグル
 export const POST = async (
@@ -35,6 +36,29 @@ export const POST = async (
         event: { connect: { id: Number(id) } },
       },
     });
+
+    // 通知（付けた時だけ・失敗してもお気に入り自体は成功のまま）
+    const event = await prisma.event.findUnique({
+      where: { id: Number(id) },
+      select: { createdBy: true }, // イベント作成者（受信者）
+    });
+    const actor = await prisma.user.findUnique({
+      where: { supabaseUserId: authUser.id },
+      select: { id: true, name: true }, // お気に入りした本人
+    });
+    if (event && actor) {
+      try {
+        await createNotification({
+          recipientUserId: event.createdBy,
+          actorUserId: actor.id,
+          title: "お気に入り",
+          content: `${actor.name}さんがあなたのイベントをお気に入りに追加しました`,
+          type: "favorite",
+        });
+      } catch (e) {
+        console.error("通知の作成に失敗", e);
+      }
+    }
 
     return NextResponse.json({ favorited: true }, { status: 201 });
   } catch (error) {
