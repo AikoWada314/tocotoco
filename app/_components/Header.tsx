@@ -57,9 +57,6 @@ export const Header: React.FC = () => {
               </>
             ) : (
               <>
-                <Link href="/contact" className="text-sm text-[#334155]">
-                  お問い合わせ
-                </Link>
                 <Link href="/auth/login" className="text-sm text-[#334155]">
                   ログイン
                 </Link>
