@@ -20,7 +20,7 @@ export const Header: React.FC = () => {
   return (
     <>
       <header className="px-6 h-[73px] font-bold flex justify-between items-center">
-        <Link href="/">
+        <Link href="/posts">
           <Image
             src="/logo.svg"
             alt="tocotoco logo"

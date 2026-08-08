@@ -69,7 +69,7 @@ export default function NewPostPage() {
         throw new Error("投稿に失敗しました");
       }
       alert("投稿を作成しました。");
-      router.push("/");
+      router.push("/posts");
     } catch {
       alert("投稿に失敗しました");
     } finally {
