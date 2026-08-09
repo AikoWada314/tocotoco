@@ -69,7 +69,7 @@ export default function NewPostPage() {
         throw new Error("投稿に失敗しました");
       }
       alert("投稿を作成しました。");
-      router.push("/");
+      router.push("/posts");
     } catch {
       alert("投稿に失敗しました");
     } finally {
@@ -88,6 +88,8 @@ export default function NewPostPage() {
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1">
       <div className="bg-white border-b border-[rgba(58,126,105,0.1)] flex items-center justify-between px-4 h-[73px] shrink-0">
         <button
+          type="button"
+          aria-label="戻る"
           onClick={() => router.back()}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
         >

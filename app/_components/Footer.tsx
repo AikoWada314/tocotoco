@@ -11,7 +11,7 @@ import { useSupabaseSession } from '../_hooks/useSupabaseSession'
 
 
 const navItems = [
-  { href: '/',       label: 'ホーム',     Icon: HomeIcon   },
+  { href: '/posts',  label: 'ホーム',     Icon: HomeIcon   },
   { href: '/spots',  label: 'スポット',   Icon: SpotIcon   },
   { href: '/search', label: '検索',       Icon: SearchIcon },
   { href: '/events', label: 'イベント',   Icon: EventIcon  },

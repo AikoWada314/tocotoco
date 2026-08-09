@@ -112,6 +112,8 @@ export default function NewEventPage() {
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1">
       <div className="bg-white border-b border-[#d1e2dc] flex items-center justify-between px-4 h-[65px] shrink-0">
         <button
+          type="button"
+          aria-label="戻る"
           onClick={() => router.back()}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
         >

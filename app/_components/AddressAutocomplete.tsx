@@ -67,6 +67,9 @@ export function AddressAutocomplete({
         </div>
       )}
       <input
+        onKeyDown={(e) => {
+          if (e.key === "Enter") e.preventDefault();
+        }}
         ref={inputRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}

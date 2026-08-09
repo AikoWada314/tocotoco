@@ -13,12 +13,15 @@ import { MeResponse } from "@/app/api/me/route";
 import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function SpotPage() {
+  // 一覧は未ログインでも見られるように認証なしで取得
   const { data, isLoading, mutate } = useApiSWR<SpotsIndexResponse>(
     "/api/spots",
+    { requireAuth: false },
   );
   const spots = data?.spots ?? [];
   const { data: categoryData } = useApiSWR<SpotCategories>(
     "/api/spot-categories",
+    { requireAuth: false },
   );
   const categories = categoryData?.categories ?? [];
   const { token } = useSupabaseSession();

@@ -73,7 +73,7 @@ export default function MyPage() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut(); // セッションを破棄
-    router.push("/auth/login"); // ログイン画面へ
+    router.push("/");
   };
 
   return (

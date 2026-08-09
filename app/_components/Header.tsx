@@ -20,7 +20,8 @@ export const Header: React.FC = () => {
   return (
     <>
       <header className="px-6 h-[73px] font-bold flex justify-between items-center">
-        <Link href="/">
+        {/* ログイン済みはタイムライン、未ログインはトップページへ */}
+        <Link href={session ? "/posts" : "/"}>
           <Image
             src="/logo.svg"
             alt="tocotoco logo"
@@ -57,8 +58,17 @@ export const Header: React.FC = () => {
               </>
             ) : (
               <>
-                <Link href="/auth/login" className="text-sm text-[#334155]">
+                <Link
+                  href="/auth/login"
+                  className="text-sm text-[#334155] transition-colors hover:text-[#3a7e69]"
+                >
                   ログイン
+                </Link>
+                <Link
+                  href="/auth/signup"
+                  className="bg-[#3a7e69] text-white rounded-full px-4 py-2 text-sm transition-colors hover:bg-[#2f6655]"
+                >
+                  会員登録
                 </Link>
               </>
             )}
