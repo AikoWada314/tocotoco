@@ -33,8 +33,11 @@ export default function EventPage() {
   const { data: me } = useApiSWR<MeResponse>("/api/me");
 
   // ① 直近のイベント一覧用（今日以降・近い順・最大10件）
-  const { data, isLoading, mutate } =
-    useApiSWR<EventsIndexResponse>(`/api/events`);
+  // 一覧は未ログインでも見られるように認証なしで取得
+  const { data, isLoading, mutate } = useApiSWR<EventsIndexResponse>(
+    `/api/events`,
+    { requireAuth: false },
+  );
   const events = data?.events;
 
   const toggleFavorite = async (e: React.MouseEvent, eventId: number) => {
@@ -56,8 +59,10 @@ export default function EventPage() {
   const to = formatYmd(
     new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1),
   );
-  const { data: monthData, mutate: mutateMonth } =
-    useApiSWR<EventsIndexResponse>(`/api/events?from=${from}&to=${to}`);
+  const { data: monthData, mutate: mutateMonth } = useApiSWR<EventsIndexResponse>(
+    `/api/events?from=${from}&to=${to}`,
+    { requireAuth: false },
+  );
   const monthEvents = monthData?.events ?? [];
 
   if (isLoading)

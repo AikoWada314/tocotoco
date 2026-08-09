@@ -12,6 +12,7 @@ export const PageHeader = ({ title }: PageHeaderProps) => {
   return (
     <header className="bg-white border-b border-[#f1f5f9] flex items-center px-4 h-[73px] shrink-0">
       <button
+        type="button"
         onClick={() => router.back()}
         className="p-1 -ml-1"
         aria-label="戻る"

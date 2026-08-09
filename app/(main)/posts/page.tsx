@@ -13,7 +13,10 @@ import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function PostPage() {
   const router = useRouter();
-  const { data, mutate } = useApiSWR<PostsIndexResponse>("/api/posts");
+  // 一覧は未ログインでも見られるように認証なしで取得
+  const { data, mutate } = useApiSWR<PostsIndexResponse>("/api/posts", {
+    requireAuth: false,
+  });
   const posts = data?.posts ?? [];
   const { session, token } = useSupabaseSession();
   const { data: me } = useApiSWR<MeResponse>("/api/me");

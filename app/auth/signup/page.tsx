@@ -19,7 +19,6 @@ type SignupFormData = {
   confirm: string;
 };
 
-
 export default function SignupPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
@@ -56,18 +55,30 @@ export default function SignupPage() {
 
   return (
     <div className="bg-[#eff9f5] flex flex-col flex-1 items-center px-4 py-16 gap-6">
-      <Image src="/logo.svg" alt="tocotoco logo" width={147} height={28} priority />
+      <Link href="/" className="flex items-center gap-2">
+        <Image
+          src="/logo.svg"
+          alt="tocotoco logo"
+          width={147}
+          height={28}
+          priority
+        />
+      </Link>
 
       <p className="text-[#334155] text-[16px] font-bold text-center">
-        あなたも池田市のコミュニティに<br />参加しませんか？
+        あなたも池田市のコミュニティに
+        <br />
+        参加しませんか？
       </p>
 
       <div className="bg-white border border-[rgba(58,126,105,0.1)] shadow-[0px_1px_1px_rgba(0,0,0,0.05)] rounded-[12px] p-[33px] w-full max-w-[420px] flex flex-col gap-10">
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
-
           {/* お名前 */}
           <div className="flex flex-col gap-2">
-            <label htmlFor="name" className="text-[#334155] text-[14px] font-medium px-1">
+            <label
+              htmlFor="name"
+              className="text-[#334155] text-[14px] font-medium px-1"
+            >
               お名前
             </label>
             <div className="relative">
@@ -82,12 +93,17 @@ export default function SignupPage() {
                 {...register("name", { required: "お名前は必須です" })}
               />
             </div>
-            {errors.name && <p className="text-red-500 text-xs px-1">{errors.name.message}</p>}
+            {errors.name && (
+              <p className="text-red-500 text-xs px-1">{errors.name.message}</p>
+            )}
           </div>
 
           {/* メールアドレス */}
           <div className="flex flex-col gap-2">
-            <label htmlFor="email" className="text-[#334155] text-[14px] font-medium px-1">
+            <label
+              htmlFor="email"
+              className="text-[#334155] text-[14px] font-medium px-1"
+            >
               メールアドレス
             </label>
             <div className="relative">
@@ -108,12 +124,19 @@ export default function SignupPage() {
                 })}
               />
             </div>
-            {errors.email && <p className="text-red-500 text-xs px-1">{errors.email.message}</p>}
+            {errors.email && (
+              <p className="text-red-500 text-xs px-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           {/* パスワード */}
           <div className="flex flex-col gap-2">
-            <label htmlFor="password" className="text-[#334155] text-[14px] font-medium px-1">
+            <label
+              htmlFor="password"
+              className="text-[#334155] text-[14px] font-medium px-1"
+            >
               パスワード
             </label>
             <div className="relative">
@@ -127,19 +150,33 @@ export default function SignupPage() {
                 className="bg-[#f8fafc] border border-[#e2e8f0] rounded-[8px] pl-12 pr-12 py-4 w-full text-[16px] text-[#6b7280] placeholder:text-[#6b7280] outline-none focus:border-[#3a7e69]"
                 {...register("password", {
                   required: "パスワードは必須です",
-                  minLength: { value: 8, message: "8文字以上で入力してください" },
+                  minLength: {
+                    value: 8,
+                    message: "8文字以上で入力してください",
+                  },
                 })}
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2">
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2"
+              >
                 <EyeIcon open={showPassword} />
               </button>
             </div>
-            {errors.password && <p className="text-red-500 text-xs px-1">{errors.password.message}</p>}
+            {errors.password && (
+              <p className="text-red-500 text-xs px-1">
+                {errors.password.message}
+              </p>
+            )}
           </div>
 
           {/* パスワード再入力 */}
           <div className="flex flex-col gap-2 pb-4">
-            <label htmlFor="confirm" className="text-[#334155] text-[14px] font-medium px-1">
+            <label
+              htmlFor="confirm"
+              className="text-[#334155] text-[14px] font-medium px-1"
+            >
               パスワードを再入力
             </label>
             <div className="relative">
@@ -156,15 +193,27 @@ export default function SignupPage() {
                   validate: (v) => v === password || "パスワードが一致しません",
                 })}
               />
-              <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-4 top-1/2 -translate-y-1/2">
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-4 top-1/2 -translate-y-1/2"
+              >
                 <EyeIcon open={showConfirm} />
               </button>
             </div>
-            {errors.confirm && <p className="text-red-500 text-xs px-1">{errors.confirm.message}</p>}
+            {errors.confirm && (
+              <p className="text-red-500 text-xs px-1">
+                {errors.confirm.message}
+              </p>
+            )}
           </div>
 
           {serverError && <p className="text-red-500 text-sm">{serverError}</p>}
-          <SubmitButton label="会員登録" pendingLabel="登録中..." isSubmitting={isSubmitting} />
+          <SubmitButton
+            label="会員登録"
+            pendingLabel="登録中..."
+            isSubmitting={isSubmitting}
+          />
         </form>
 
         <div className="border-t border-[#f1f5f9] pt-6 text-center text-[14px] text-[#475569]">
