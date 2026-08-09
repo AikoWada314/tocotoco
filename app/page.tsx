@@ -91,13 +91,13 @@ export default function HomePage() {
                   <>
                     <Link
                       href="/auth/signup"
-                      className="bg-[#3a7e69] text-white rounded-full px-8 py-3 text-[14px] font-bold transition-colors hover:bg-[#2f6655]"
+                      className="min-w-60 text-center bg-[#3a7e69] text-white rounded-full px-8 py-3 text-[14px] font-bold transition-colors hover:bg-[#2f6655]"
                     >
                       無料ではじめる
                     </Link>
                     <Link
                       href="/posts"
-                      className="bg-white text-[#3a7e69] border border-[#3a7e69] rounded-full px-8 py-3 text-[14px] font-bold transition-colors hover:bg-[#eff9f5]"
+                      className="min-w-60 text-center bg-white text-[#3a7e69] border border-[#3a7e69] rounded-full px-8 py-3 text-[14px] font-bold transition-colors hover:bg-[#eff9f5]"
                     >
                       つぶやきをのぞいてみる
                     </Link>
