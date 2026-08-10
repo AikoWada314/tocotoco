@@ -13,7 +13,7 @@ import { PageHeader } from "@/app/_components/PageHeader";
 import {
   useProfileForm,
   ProfileFormValues,
-} from "@/app/(main)/mypage/edit/_hooks/useProfileForm";
+} from "@/app/(tabs)/mypage/edit/_hooks/useProfileForm";
 
 export default function Page() {
   ///api/meからかえってきたdataをmeとよぶ（名前決め）
