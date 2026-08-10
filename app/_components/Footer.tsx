@@ -29,7 +29,8 @@ export const Footer = () => {
       <nav className="h-full">
         <ul className="flex justify-around items-center h-full px-4 max-w-3xl mx-auto">
           {navItems.map(({ href, label, Icon }) => {
-            const isActive = pathname === href
+            // 完全一致に加えて配下のページ(詳細など)でもタブを点灯させる(前方一致)
+            const isActive = pathname === href || pathname.startsWith(href + '/')
             const color = isActive ? '#3A7E69' : '#717171'
             return (
               <li key={href} className="flex-1">

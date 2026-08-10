@@ -63,10 +63,7 @@ export default function HomePage() {
   // トップページだけは max-w-3xl の中央カラムに入れず、フル幅のPC向けデザインにする
   return (
     <>
-      {/* スクロールしても付いてくる追従ヘッダー */}
-      <div className="sticky top-0 z-50 bg-[rgba(255,255,255,0.95)] backdrop-blur-[6px] border-b border-[#f1f5f9]">
-        <Header />
-      </div>
+      <Header />
       {/* 下部の余白は固定Footer(ログイン時のみ表示)との重なり防止用 */}
       <div className={`flex-1 bg-[#eff9f5] ${session ? "pb-24" : ""}`}>
         {/* ヒーロー */}

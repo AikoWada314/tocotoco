@@ -19,7 +19,8 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className="px-6 h-[73px] font-bold flex justify-between items-center">
+      {/* スクロールしても上部に固定(sticky)。半透明白+ぼかしでコンテンツの上に浮く */}
+      <header className="sticky top-0 z-50 bg-[rgba(255,255,255,0.95)] backdrop-blur-[6px] border-b border-[#f1f5f9] px-6 h-[73px] font-bold flex justify-between items-center">
         {/* ログイン済みはタイムライン、未ログインはトップページへ */}
         <Link href={session ? "/posts" : "/"}>
           <Image
