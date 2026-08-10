@@ -41,7 +41,7 @@ export const NotificationModal = ({
     <Modal
       isOpen={isOpen}
       onRequestClose={onClose}
-      className="bg-white w-full max-w-sm mt-16 mr-4 rounded-[12px] shadow-lg overflow-hidden outline-none"
+      className="bg-white w-full max-w-sm mt-16 mx-4 rounded-[12px] shadow-lg overflow-hidden outline-none"
       overlayClassName="fixed inset-0 bg-black/40 z-50 flex justify-end items-start"
     >
       {/* ヘッダー */}

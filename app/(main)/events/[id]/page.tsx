@@ -14,8 +14,10 @@ import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function Page() {
   const { id } = useParams();
+  // 詳細も未ログインで見られるように認証なしで取得
   const { data, isLoading, mutate } = useApiSWR<EventShowResponse>(
     `/api/events/${id}`,
+    { requireAuth: false },
   );
   const { token } = useSupabaseSession();
   const { data: me } = useApiSWR<MeResponse>("/api/me");
@@ -44,7 +46,10 @@ export default function Page() {
     );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 bg-white">
+    // ログイン時は固定Footer(下部ナビ)の高さぶん下に余白を取り、末尾のコンテンツが隠れないようにする
+    <div
+      className={`flex flex-col flex-1 min-h-0 bg-white ${token ? "pb-16" : ""}`}
+    >
       <PageHeader title="イベント詳細" />
 
       <div className="flex-1 min-h-0 overflow-y-auto">

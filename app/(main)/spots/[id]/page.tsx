@@ -16,11 +16,14 @@ import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function Page() {
   const { id } = useParams();
+  // 詳細も未ログインで見られるように認証なしで取得
   const { data, isLoading, mutate } = useApiSWR<SpotShowResponse>(
     `/api/spots/${id}`,
+    { requireAuth: false },
   );
   const { data: categoryData } = useApiSWR<SpotCategories>(
     "/api/spot-categories",
+    { requireAuth: false },
   );
   const { token } = useSupabaseSession();
   const { data: me } = useApiSWR<MeResponse>("/api/me");

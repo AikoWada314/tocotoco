@@ -102,7 +102,10 @@ export default function EventPage() {
     : events;
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 bg-white">
+    // ログイン時は固定Footer(下部ナビ)の高さぶん下に余白を取り、最後のカードが隠れないようにする
+    <div
+      className={`flex flex-col flex-1 min-h-0 bg-white ${token ? "pb-16" : ""}`}
+    >
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6">
         <div className="relative flex items-center justify-center py-4">
           <h1 className="text-[18px] font-bold text-[#0f172a]">

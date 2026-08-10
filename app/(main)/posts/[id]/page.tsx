@@ -18,7 +18,11 @@ import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function Page() {
   const { id } = useParams();
-  const { data, isLoading, mutate } = useApiSWR<PostShowResponse>(`/api/posts/${id}`);
+  // 詳細も未ログインで見られるように認証なしで取得
+  const { data, isLoading, mutate } = useApiSWR<PostShowResponse>(
+    `/api/posts/${id}`,
+    { requireAuth: false },
+  );
   const post = data?.post;
   const { token } = useSupabaseSession();
   const { data: me } = useApiSWR<MeResponse>("/api/me");
@@ -77,7 +81,10 @@ export default function Page() {
     );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 bg-white">
+    // ログイン時は固定Footer(下部ナビ)の高さぶん下に余白を取り、コメント入力バーをナビの上に置く
+    <div
+      className={`flex flex-col flex-1 min-h-0 bg-white ${token ? "pb-16" : ""}`}
+    >
       <PageHeader title="つぶやき詳細" />
 
       <div className="flex-1 min-h-0 overflow-y-auto">
