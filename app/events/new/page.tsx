@@ -110,7 +110,7 @@ export default function NewEventPage() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1">
-      <div className="bg-white border-b border-[#d1e2dc] flex items-center justify-between px-4 h-[65px] shrink-0">
+      <div className="sticky top-0 z-40 bg-white border-b border-[#d1e2dc] flex items-center justify-between px-4 h-[65px] shrink-0">
         <button
           type="button"
           aria-label="戻る"

@@ -10,7 +10,8 @@ export const PageHeader = ({ title }: PageHeaderProps) => {
   const router = useRouter();
 
   return (
-    <header className="bg-white border-b border-[#f1f5f9] flex items-center px-4 h-[73px] shrink-0">
+    // スクロールしても上部に固定(sticky)
+    <header className="sticky top-0 z-40 bg-white border-b border-[#f1f5f9] flex items-center px-4 h-[73px] shrink-0">
       <button
         type="button"
         onClick={() => router.back()}

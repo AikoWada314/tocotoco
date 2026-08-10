@@ -107,7 +107,7 @@ export default function NewReviewPage() {
       className="flex flex-col flex-1 bg-[#f5f7f6]"
     >
       {/* ヘッダー */}
-      <div className="bg-white border-b border-[#d1e2dc] flex items-center justify-between px-4 h-[65px] shrink-0">
+      <div className="sticky top-0 z-40 bg-white border-b border-[#d1e2dc] flex items-center justify-between px-4 h-[65px] shrink-0">
         <button
           type="button"
           onClick={() => router.back()}
