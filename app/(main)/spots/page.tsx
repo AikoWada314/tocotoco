@@ -18,7 +18,7 @@ export default function SpotPage() {
     "/api/spots",
     { requireAuth: false },
   );
-  const spots = data?.spots ?? [];
+  const spots = data?.spots;
   const { data: categoryData } = useApiSWR<SpotCategories>(
     "/api/spot-categories",
     { requireAuth: false },
@@ -37,11 +37,20 @@ export default function SpotPage() {
       method: "POST",
       headers: { Authorization: token },
     });
-    mutate(); // 一覧を再取得して★を更新
+    mutate();
   };
-
-  // selectedは選択時点のスナップショット。mutate後の最新のお気に入り状態は
-  // 最新のspotsから引き直す（selectedのfavoritesは古いままなので）
+  if (isLoading)
+    return (
+      <div className="flex-1 flex items-center justify-center text-[#64748b]">
+        読み込み中...
+      </div>
+    );
+  if (!spots)
+    return (
+      <div className="flex-1 flex items-center justify-center text-[#64748b]">
+        スポットの読み込みに失敗しました
+      </div>
+    );
   const selectedFavorites =
     spots.find((s) => s.id === selected?.id)?.favorites ??
     selected?.favorites ??
@@ -58,18 +67,6 @@ export default function SpotPage() {
     ? (categories.find((c) => c.id === selected.categoryId)?.name ?? "")
     : "";
 
-  if (isLoading)
-    return (
-      <div className="flex-1 flex items-center justify-center text-[#64748b]">
-        読み込み中...
-      </div>
-    );
-  if (!spots)
-    return (
-      <div className="flex-1 flex items-center justify-center text-[#64748b]">
-        スポットが見つかりません
-      </div>
-    );
   return (
     <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
       {/* relative: 上に検索バーやカードを重ねる基準
