@@ -70,7 +70,7 @@ export default function HomePage() {
         <section className="bg-white border-b border-[#f1f5f9]">
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-24 flex flex-col items-center gap-4 text-center">
             <h1 className="text-[24px] md:text-[40px] font-bold text-[#1e293b] leading-snug">
-              池田市の「いま」が集まるSNS
+              検索では出てこない、池田のこと。
             </h1>
             <p className="text-[13px] md:text-[15px] text-[#64748b] leading-relaxed">
               つぶやき・イベント・お店の情報を、池田市のみんなでシェアするコミュニティです。
