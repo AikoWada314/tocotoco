@@ -28,16 +28,18 @@ export const GET = async (request: NextRequest) => {
   }
 
   try {
-    const dbUser = await prisma.user.findUnique({
+    const dbUser = await prisma.user.upsert({
       where: { supabaseUserId: user.id },
       select: { id: true, name: true, nickname: true, iconUrl: true },
+      update: {},
+      create: {
+        supabaseUserId: user.id,
+        name:
+          user.user_metadata?.name ?? user.email?.split("@")[0] ?? "ユーザー",
+        role: "user",
+        status: "active",
+      },
     });
-    if (!dbUser) {
-      return NextResponse.json(
-        { message: "ユーザーが見つかりません" },
-        { status: 404 },
-      );
-    }
     return NextResponse.json<MeResponse>({ user: dbUser }, { status: 200 });
   } catch (error) {
     if (error instanceof Error) {
