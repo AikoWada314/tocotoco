@@ -8,9 +8,27 @@ const notoSansJP = Noto_Sans_JP({
   weight: ["400", "500", "700"],
 });
 
+const siteTitle = "tocotoco | 池田市の情報共有アプリ";
+const siteDescription =
+  "地域のつぶやき・スポット・イベントを共有するコミュニティ";
+
 export const metadata: Metadata = {
-  title: "tocotoco | 池田市の情報共有アプリ",
-  description: "地域のつぶやき・スポット・イベントを共有するコミュニティ",
+  // og:image などURL系メタデータを絶対URLにするための基準（相対パス指定時に必須）
+  metadataBase: new URL("https://tocotoco-ikeda.vercel.app"),
+  title: siteTitle,
+  description: siteDescription,
+  // OGP画像は app/opengraph-image.png（1200×630）をNext.jsのファイル規約で自動出力
+  openGraph: {
+    title: siteTitle,
+    description: siteDescription,
+    url: "/",
+    siteName: "tocotoco",
+    locale: "ja_JP",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({
