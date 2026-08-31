@@ -130,7 +130,7 @@ export default function Page() {
         {/* ユーザーネーム */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[13px] font-medium text-[#64748b]">
-            ユーザーネーム
+            ユーザーネーム（半角英数字またはアンダースコア）
           </label>
           <input
             disabled={isSubmitting}

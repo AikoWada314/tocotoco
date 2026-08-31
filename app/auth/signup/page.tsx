@@ -17,6 +17,7 @@ type SignupFormData = {
   email: string;
   password: string;
   confirm: string;
+  nickname: string;
 };
 
 export default function SignupPage() {
@@ -41,7 +42,7 @@ export default function SignupPage() {
       email: data.email,
       password: data.password,
       options: {
-        data: { name: data.name },
+        data: { name: data.name, nickname: data.nickname },
       },
     });
 
@@ -95,6 +96,43 @@ export default function SignupPage() {
             </div>
             {errors.name && (
               <p className="text-red-500 text-xs px-1">{errors.name.message}</p>
+            )}
+          </div>
+
+          {/* ユーザーネーム */}
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="nickname"
+              className="text-[#334155] text-[14px] font-medium px-1"
+            >
+              ユーザーネーム
+            </label>
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                <UserIcon />
+              </div>
+              <input
+                id="nickname"
+                type="text"
+                placeholder="ikeda_1234"
+                className="bg-[#f8fafc] border border-[#e2e8f0] rounded-[8px] pl-12 pr-4 py-4 w-full text-[16px] text-[#6b7280] placeholder:text-[#6b7280] outline-none focus:border-[#3a7e69]"
+                {...register("nickname", {
+                  required: "ユーザーネームは必須です",
+                  pattern: {
+                    value: /^[a-zA-Z0-9_]+$/,
+                    message: "半角英数字またはアンダースコアで入力してください",
+                  },
+                  maxLength: {
+                    value: 20,
+                    message: "ユーザーネームは20文字以内で入力してください",
+                  },
+                })}
+              />
+            </div>
+            {errors.nickname && (
+              <p className="text-red-500 text-xs px-1">
+                {errors.nickname.message}
+              </p>
             )}
           </div>
 

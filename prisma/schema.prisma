@@ -16,7 +16,7 @@ model User {
   id             Int      @id @default(autoincrement())
   supabaseUserId String   @unique @map("supabase_user_id")
   name           String
-  nickname       String?
+  nickname       String   @unique
   userId         String?  @unique @map("user_id")
   iconUrl        String?  @map("icon_url")
   bio            String?

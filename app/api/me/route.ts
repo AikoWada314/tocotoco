@@ -1,19 +1,20 @@
 import { prisma } from "@/app/_libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/app/_libs/auth";
+import { Prisma } from "@/app/generated/prisma/client";
 
 export type MeResponse = {
   user: {
     id: number;
     name: string;
-    nickname: string | null;
+    nickname: string;
     iconUrl: string | null;
   };
 };
 
 export type UpdateMeRequestBody = {
   name: string;
-  nickname: string | null;
+  nickname: string;
   iconUrl: string | null;
 };
 
@@ -27,8 +28,14 @@ export const GET = async (request: NextRequest) => {
     );
   }
 
-  try {
-    const dbUser = await prisma.user.upsert({
+  // 新規作成時のニックネーム候補（登録フォーム入力 → メール@前の掃除 → 固定値）
+  const baseNickname =
+    user.user_metadata?.nickname ??
+    (user.email?.split("@")[0]?.toLowerCase().replace(/[^a-z0-9_]/g, "") ||
+      "user");
+
+  const upsertUser = (nickname: string) =>
+    prisma.user.upsert({
       where: { supabaseUserId: user.id },
       select: { id: true, name: true, nickname: true, iconUrl: true },
       update: {},
@@ -38,10 +45,25 @@ export const GET = async (request: NextRequest) => {
           user.user_metadata?.name ?? user.email?.split("@")[0] ?? "ユーザー",
         role: "user",
         status: "active",
+        nickname,
       },
     });
+
+  try {
+    const dbUser = await upsertUser(baseNickname);
     return NextResponse.json<MeResponse>({ user: dbUser }, { status: 200 });
   } catch (error) {
+    // ニックネームが既存ユーザーと衝突(P2002)した場合のみ、サフィックスを付けて一度だけ再試行
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      const retryNickname = `${baseNickname.slice(0, 15)}_${Math.random()
+        .toString(36)
+        .slice(2, 6)}`;
+      const dbUser = await upsertUser(retryNickname);
+      return NextResponse.json<MeResponse>({ user: dbUser }, { status: 200 });
+    }
     if (error instanceof Error) {
       return NextResponse.json({ message: error.message }, { status: 400 });
     }
