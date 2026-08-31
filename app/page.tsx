@@ -123,14 +123,14 @@ export default function HomePage() {
                       <div className="shrink-0 w-8 h-8 rounded-full bg-[#e2e8f0] overflow-hidden">
                         <Image
                           src={post.user.iconUrl || "/user.svg"}
-                          alt={post.user.nickname ?? post.user.name}
+                          alt={post.user.nickname || post.user.name}
                           width={32}
                           height={32}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <span className="text-[13px] font-bold text-[#1e293b] truncate">
-                        {post.user.nickname ?? post.user.name}
+                        {post.user.nickname || post.user.name}
                       </span>
                       <span className="shrink-0 text-[11px] text-[#94a3b8]">
                         {formatTimeAgo(post.createdAt)}

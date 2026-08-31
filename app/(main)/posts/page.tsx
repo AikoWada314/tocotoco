@@ -90,7 +90,7 @@ export default function PostPage() {
                   {/* 名前・時刻・カテゴリバッジ */}
                   <div className="flex items-center gap-2">
                     <span className="text-[14px] font-bold text-[#1e293b]">
-                      {post.user.nickname ?? post.user.name}
+                      {post.user.nickname || post.user.name}
                     </span>
                     <span className="text-[12px] text-[#94a3b8]">
                       {formatTimeAgo(post.createdAt)}

@@ -103,7 +103,7 @@ export default function Page() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[16px] font-medium text-[#0f172a]">
-                {post.user.nickname ?? post.user.name}
+                {post.user.nickname || post.user.name}
               </p>
               <p className="text-[12px] text-[#64748b] mt-1">
                 {formatDateTime(post.createdAt)}
@@ -221,7 +221,7 @@ export default function Page() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-[14px] font-medium text-[#0f172a]">
-                      {comment.user.nickname ?? comment.user.name}
+                      {comment.user.nickname || comment.user.name}
                     </p>
                     <span className="text-[10px] text-[#94a3b8] shrink-0 mt-0.5">
                       {formatTimeAgo(comment.createdAt)}
