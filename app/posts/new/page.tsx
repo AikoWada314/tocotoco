@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { supabase } from "@/app/_libs/supabase";
 import { usePostForm } from "@/app/posts/_hooks/usePostForm";
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { MeResponse } from "@/app/api/me/route";
 import { PostCategories } from "@/app/api/post-categories/route";
 import { PostFormValues } from "@/app/posts/_hooks/usePostForm";
@@ -14,7 +13,6 @@ import { CreatePostRequestBody } from "@/app/api/posts/route";
 
 export default function NewPostPage() {
   const router = useRouter();
-  const { token } = useSupabaseSession();
   const { data: me } = useApiSWR<MeResponse>("/api/me");
   const { data: categoryData } = useApiSWR<PostCategories>(
     "/api/post-categories",
@@ -61,7 +59,6 @@ export default function NewPostPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ?? "",
         },
         body: JSON.stringify(body),
       });

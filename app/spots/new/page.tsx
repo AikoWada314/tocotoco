@@ -5,7 +5,6 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { supabase } from "@/app/_libs/supabase";
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { SpotFormValues } from "@/app/(main)/spots/_hooks/useSpotForm";
 import { CreateSpotRequestBody } from "@/app/api/spots/route";
 import { useSpotForm } from "@/app/(main)/spots/_hooks/useSpotForm";
@@ -14,7 +13,6 @@ import { LocationField } from "@/app/_components/LocationField";
 
 export default function NewSpotPage() {
   const router = useRouter();
-  const { token } = useSupabaseSession();
   const { data: categoryData } = useApiSWR<SpotCategories>(
     "/api/spot-categories",
   );
@@ -77,7 +75,6 @@ export default function NewSpotPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ?? "",
         },
         body: JSON.stringify(body),
       });

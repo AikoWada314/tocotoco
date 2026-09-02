@@ -41,16 +41,10 @@ const SkeletonCards = ({ count }: { count: number }) => (
 export default function HomePage() {
   const { session, isLoading } = useSupabaseSession();
 
-  // トップページは未ログインでも見せたいので requireAuth: false で取得する
-  const { data: postsData } = useApiSWR<PostsIndexResponse>("/api/posts", {
-    requireAuth: false,
-  });
-  const { data: eventsData } = useApiSWR<EventsIndexResponse>("/api/events", {
-    requireAuth: false,
-  });
-  const { data: spotsData } = useApiSWR<SpotsIndexResponse>("/api/spots", {
-    requireAuth: false,
-  });
+  // トップページは未ログインでも見せる（これらのGET APIは公開）
+  const { data: postsData } = useApiSWR<PostsIndexResponse>("/api/posts");
+  const { data: eventsData } = useApiSWR<EventsIndexResponse>("/api/events");
+  const { data: spotsData } = useApiSWR<SpotsIndexResponse>("/api/spots");
 
   const posts = (postsData?.posts ?? []).slice(0, 6);
   // /api/events は「今日以降・近い順」で返してくるので先頭3件が直近の開催予定

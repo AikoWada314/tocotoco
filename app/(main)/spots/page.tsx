@@ -13,15 +13,12 @@ import { MeResponse } from "@/app/api/me/route";
 import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function SpotPage() {
-  // 一覧は未ログインでも見られるように認証なしで取得
-  const { data, isLoading, mutate } = useApiSWR<SpotsIndexResponse>(
-    "/api/spots",
-    { requireAuth: false },
-  );
+  // 一覧は未ログインでも閲覧できる
+  const { data, isLoading, mutate } =
+    useApiSWR<SpotsIndexResponse>("/api/spots");
   const spots = data?.spots;
   const { data: categoryData } = useApiSWR<SpotCategories>(
     "/api/spot-categories",
-    { requireAuth: false },
   );
   const categories = categoryData?.categories ?? [];
   const { token } = useSupabaseSession();
@@ -33,10 +30,7 @@ export default function SpotPage() {
   const toggleFavorite = async (e: React.MouseEvent, spotId: number) => {
     e.preventDefault(); // カード全体のリンク遷移を止める
     if (!token) return; // 未ログインなら何もしない
-    await fetch(`/api/spots/${spotId}/favorites`, {
-      method: "POST",
-      headers: { Authorization: token },
-    });
+    await fetch(`/api/spots/${spotId}/favorites`, { method: "POST" });
     mutate();
   };
   if (isLoading)

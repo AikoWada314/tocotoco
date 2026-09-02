@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { MeResponse, UpdateMeRequestBody } from "@/app/api/me/route";
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { supabase } from "@/app/_libs/supabase";
 import { getPostImageUrl } from "@/app/_libs/storage";
 import { PageHeader } from "@/app/_components/PageHeader";
@@ -18,8 +17,6 @@ import {
 export default function Page() {
   ///api/meからかえってきたdataをmeとよぶ（名前決め）
   const { data: me, mutate } = useApiSWR<MeResponse>("/api/me");
-  //フックの中からtokenだけを取り出す
-  const { token } = useSupabaseSession();
   const router = useRouter();
   const {
     register,
@@ -70,7 +67,6 @@ export default function Page() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ?? "",
         },
         body: JSON.stringify(body),
       });

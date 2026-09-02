@@ -31,7 +31,10 @@ export const GET = async (request: NextRequest) => {
   // 新規作成時のニックネーム候補（登録フォーム入力 → メール@前の掃除 → 固定値）
   const baseNickname =
     user.user_metadata?.nickname ??
-    (user.email?.split("@")[0]?.toLowerCase().replace(/[^a-z0-9_]/g, "") ||
+    (user.email
+      ?.split("@")[0]
+      ?.toLowerCase()
+      .replace(/[^a-z0-9_]/g, "") ||
       "user");
 
   const upsertUser = (nickname: string) =>

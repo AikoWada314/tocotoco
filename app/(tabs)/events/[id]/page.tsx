@@ -14,10 +14,9 @@ import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function Page() {
   const { id } = useParams();
-  // 詳細も未ログインで見られるように認証なしで取得
+  // 詳細は未ログインでも閲覧できる
   const { data, isLoading, mutate } = useApiSWR<EventShowResponse>(
     `/api/events/${id}`,
-    { requireAuth: false },
   );
   const { token } = useSupabaseSession();
   const { data: me } = useApiSWR<MeResponse>("/api/me");
@@ -25,10 +24,7 @@ export default function Page() {
 
   const toggleFavorite = async () => {
     if (!token) return; // 未ログインなら何もしない
-    await fetch(`/api/events/${id}/favorites`, {
-      method: "POST",
-      headers: { Authorization: token },
-    });
+    await fetch(`/api/events/${id}/favorites`, { method: "POST" });
     mutate(); // 詳細を再取得して★を更新
   };
 

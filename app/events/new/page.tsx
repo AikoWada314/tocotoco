@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/app/_libs/supabase";
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { EventFormValues } from "@/app/(main)/events/_hooks/useEventForm";
 import { CreateEventRequestBody } from "@/app/api/events/route";
 import { useEventForm } from "@/app/(main)/events/_hooks/useEventForm";
@@ -12,7 +11,6 @@ import { LocationField } from "@/app/_components/LocationField";
 
 export default function NewEventPage() {
   const router = useRouter();
-  const { token } = useSupabaseSession();
   const {
     register,
     watch,
@@ -94,7 +92,6 @@ export default function NewEventPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ?? "",
         },
         body: JSON.stringify(body),
       });

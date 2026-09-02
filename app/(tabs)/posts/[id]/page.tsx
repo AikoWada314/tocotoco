@@ -18,10 +18,9 @@ import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function Page() {
   const { id } = useParams();
-  // 詳細も未ログインで見られるように認証なしで取得
+  // 詳細は未ログインでも閲覧できる
   const { data, isLoading, mutate } = useApiSWR<PostShowResponse>(
     `/api/posts/${id}`,
-    { requireAuth: false },
   );
   const post = data?.post;
   const { token } = useSupabaseSession();
@@ -35,7 +34,6 @@ export default function Page() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ?? "",
         },
         body: JSON.stringify({ content: values.content }),
       });
@@ -52,18 +50,12 @@ export default function Page() {
   };
   const toggleLike = async () => {
     if (!token) return;
-    await fetch(`/api/posts/${id}/likes`, {
-      method: "POST",
-      headers: { Authorization: token },
-    });
+    await fetch(`/api/posts/${id}/likes`, { method: "POST" });
     mutate();
   };
   const toggleFavorite = async () => {
     if (!token) return;
-    await fetch(`/api/posts/${id}/favorites`, {
-      method: "POST",
-      headers: { Authorization: token },
-    });
+    await fetch(`/api/posts/${id}/favorites`, { method: "POST" });
     mutate();
   };
 

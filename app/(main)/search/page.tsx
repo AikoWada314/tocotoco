@@ -52,10 +52,8 @@ export default function SearchPage() {
     return `/api/search?query=${encodeURIComponent(query)}&page=${pageIndex + 1}`;
   };
 
-  const { data, isLoading, size, setSize } = useApiSWRInfinite<SearchResponse>(
-    getKey,
-    { requireAuth: false },
-  );
+  const { data, isLoading, size, setSize } =
+    useApiSWRInfinite<SearchResponse>(getKey);
 
   // dataは[{results,hasMore}, ...]のページ配列。flatMapで1本に平す
   const results = data?.flatMap((page) => page.results) ?? [];

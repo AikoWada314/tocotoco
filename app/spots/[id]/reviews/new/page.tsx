@@ -6,7 +6,6 @@ import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/app/_libs/supabase";
 import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { getPostImageUrl } from "@/app/_libs/storage";
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { SpotShowResponse } from "@/app/api/spots/[id]/route";
 import { ReviewFormValues } from "@/app/(main)/spots/[id]/reviews/_hooks/useSpotReviewForm";
 import { CreateReviewRequestBody } from "@/app/api/spots/[id]/reviews/route";
@@ -15,7 +14,6 @@ import { useSpotReviewForm } from "@/app/(main)/spots/[id]/reviews/_hooks/useSpo
 export default function NewReviewPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { token } = useSupabaseSession();
   const {
     register,
     watch,
@@ -64,7 +62,6 @@ export default function NewReviewPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ?? "",
         },
         body: JSON.stringify(body),
       });

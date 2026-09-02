@@ -5,7 +5,6 @@ import { CloseIcon } from "./icons/CloseIcon";
 import { BellIcon } from "./icons/BellIcon";
 import { useApiSWR } from "../_hooks/useApiSWR";
 import { MyNotificationsResponse } from "@/app/api/me/notifications/route";
-import { useSupabaseSession } from "../_hooks/useSupabaseSession";
 
 type NotificationModalProps = {
   isOpen: boolean;
@@ -22,13 +21,11 @@ export const NotificationModal = ({
     isOpen ? "/api/me/notifications" : null,
   );
   const notifications = data?.notifications ?? [];
-  const { token } = useSupabaseSession();
 
   const markAsRead = async (id: number) => {
     try {
       const res = await fetch(`/api/me/notifications/${id}`, {
         method: "PATCH",
-        headers: { Authorization: token ?? "" },
       });
       if (!res.ok) throw new Error("既読処理に失敗しました");
       mutate(); // 一覧を取り直して isRead を反映（未読ハイライトが消える）

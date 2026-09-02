@@ -13,30 +13,22 @@ import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function PostPage() {
   const router = useRouter();
-  // 一覧は未ログインでも見られるように認証なしで取得
-  const { data, mutate } = useApiSWR<PostsIndexResponse>("/api/posts", {
-    requireAuth: false,
-  });
+  // 一覧は未ログインでも閲覧できる
+  const { data, mutate } = useApiSWR<PostsIndexResponse>("/api/posts");
   const posts = data?.posts ?? [];
   const { session, token } = useSupabaseSession();
   const { data: me } = useApiSWR<MeResponse>("/api/me");
   const toggleLike = async (e: React.MouseEvent, postId: number) => {
     e.preventDefault(); // 親Linkの遷移を止める
     if (!token) return; // 未ログインなら何もしない
-    await fetch(`/api/posts/${postId}/likes`, {
-      method: "POST",
-      headers: { Authorization: token },
-    });
+    await fetch(`/api/posts/${postId}/likes`, { method: "POST" });
     mutate(); // 一覧を再取得してハートと数を更新
   };
 
   const toggleFavorite = async (e: React.MouseEvent, postId: number) => {
     e.preventDefault(); // 親Linkの遷移を止める
     if (!token) return; // 未ログインなら何もしない
-    await fetch(`/api/posts/${postId}/favorites`, {
-      method: "POST",
-      headers: { Authorization: token },
-    });
+    await fetch(`/api/posts/${postId}/favorites`, { method: "POST" });
     mutate(); // 一覧を再取得してハートと数を更新
   };
 

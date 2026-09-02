@@ -33,20 +33,15 @@ export default function EventPage() {
   const { data: me } = useApiSWR<MeResponse>("/api/me");
 
   // ① 直近のイベント一覧用（今日以降・近い順・最大10件）
-  // 一覧は未ログインでも見られるように認証なしで取得
-  const { data, isLoading, mutate } = useApiSWR<EventsIndexResponse>(
-    `/api/events`,
-    { requireAuth: false },
-  );
+  // 一覧は未ログインでも閲覧できる
+  const { data, isLoading, mutate } =
+    useApiSWR<EventsIndexResponse>(`/api/events`);
   const events = data?.events;
 
   const toggleFavorite = async (e: React.MouseEvent, eventId: number) => {
     e.preventDefault(); // カード全体のリンク遷移を止める
     if (!token) return; // 未ログインなら何もしない
-    await fetch(`/api/events/${eventId}/favorites`, {
-      method: "POST",
-      headers: { Authorization: token },
-    });
+    await fetch(`/api/events/${eventId}/favorites`, { method: "POST" });
     // 直近リストと月別カレンダー用、両方のキャッシュを更新
     mutate();
     mutateMonth();
@@ -59,10 +54,8 @@ export default function EventPage() {
   const to = formatYmd(
     new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1),
   );
-  const { data: monthData, mutate: mutateMonth } = useApiSWR<EventsIndexResponse>(
-    `/api/events?from=${from}&to=${to}`,
-    { requireAuth: false },
-  );
+  const { data: monthData, mutate: mutateMonth } =
+    useApiSWR<EventsIndexResponse>(`/api/events?from=${from}&to=${to}`);
   const monthEvents = monthData?.events ?? [];
 
   if (isLoading)
