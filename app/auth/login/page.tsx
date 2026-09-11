@@ -7,6 +7,7 @@ import { supabase } from "@/app/_libs/supabase";
 import Link from "next/link";
 import Image from "next/image";
 import { SubmitButton } from "@/app/_components/SubmitButton";
+import { GoogleAuthButton } from "@/app/_components/GoogleAuthButton";
 import { EmailIcon } from "@/app/_components/icons/EmailIcon";
 import { LockIcon } from "@/app/_components/icons/LockIcon";
 import { EyeIcon } from "@/app/_components/icons/EyeIcon";
@@ -129,6 +130,15 @@ export default function LoginPage() {
           {serverError && <p className="text-red-500 text-sm">{serverError}</p>}
           <SubmitButton label="ログイン" pendingLabel="ログイン中..." isSubmitting={isSubmitting} />
         </form>
+
+        <div className="flex flex-col gap-5">
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-[#f1f5f9]" />
+            <span className="text-[12px] text-[#94a3b8]">または</span>
+            <div className="h-px flex-1 bg-[#f1f5f9]" />
+          </div>
+          <GoogleAuthButton label="Googleでログイン" />
+        </div>
 
         <div className="border-t border-[#f1f5f9] pt-6 text-center text-[14px] text-[#475569]">
           新規会員登録は{" "}

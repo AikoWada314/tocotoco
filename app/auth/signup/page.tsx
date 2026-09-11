@@ -7,6 +7,7 @@ import { supabase } from "@/app/_libs/supabase";
 import Link from "next/link";
 import Image from "next/image";
 import { SubmitButton } from "@/app/_components/SubmitButton";
+import { GoogleAuthButton } from "@/app/_components/GoogleAuthButton";
 import { UserIcon } from "@/app/_components/icons/UserIcon";
 import { EmailIcon } from "@/app/_components/icons/EmailIcon";
 import { LockIcon } from "@/app/_components/icons/LockIcon";
@@ -253,6 +254,15 @@ export default function SignupPage() {
             isSubmitting={isSubmitting}
           />
         </form>
+
+        <div className="flex flex-col gap-5">
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-[#f1f5f9]" />
+            <span className="text-[12px] text-[#94a3b8]">または</span>
+            <div className="h-px flex-1 bg-[#f1f5f9]" />
+          </div>
+          <GoogleAuthButton label="Googleで登録" />
+        </div>
 
         <div className="border-t border-[#f1f5f9] pt-6 text-center text-[14px] text-[#475569]">
           既にアカウントをお持ちの方は{" "}
