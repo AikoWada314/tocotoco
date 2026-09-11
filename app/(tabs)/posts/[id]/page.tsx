@@ -28,6 +28,7 @@ export default function Page() {
   const post = data?.post;
   const { me, isLoggedIn } = useAuthStatus();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { register, handleSubmit, reset } = useCommentForm();
   const onSubmit = async (values: CommentFormValues) => {
     setIsSubmitting(true);
@@ -79,6 +80,18 @@ export default function Page() {
     }
   };
 
+  const handleDelete = async () => {
+    setIsMenuOpen(false);
+    if (!confirm("この投稿を削除しますか？")) return;
+
+    const res = await fetch(`/api/posts/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      alert("削除に失敗しました");
+      return;
+    }
+    router.replace("/posts");
+  };
+
   if (isLoading)
     return (
       <div className="flex-1 flex items-center justify-center text-[#64748b]">
@@ -121,18 +134,58 @@ export default function Page() {
                 {formatDateTime(post.createdAt)}
               </p>
             </div>
-            <div className="self-start">
-              {/* 投稿者をブロックしたら、この投稿はもう見せないので一覧へ戻す */}
-              <ReportMenu
-                targetType="post"
-                targetId={post.id}
-                author={{
-                  id: post.user.id,
-                  name: post.user.nickname || post.user.name,
-                }}
-                onBlocked={() => router.push("/posts")}
-              />
-            </div>
+            {/* 自分の投稿には編集・削除、他人の投稿には通報・ブロックのメニューを出す */}
+            {me?.user.id === post.userId ? (
+              <div className="relative shrink-0 self-start">
+                <button
+                  className="px-1 pt-1"
+                  aria-label="メニュー"
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                >
+                  <svg width="16" height="4" viewBox="0 0 16 4" fill="none">
+                    <circle cx="2" cy="2" r="1.5" fill="#94a3b8" />
+                    <circle cx="8" cy="2" r="1.5" fill="#94a3b8" />
+                    <circle cx="14" cy="2" r="1.5" fill="#94a3b8" />
+                  </svg>
+                </button>
+                {isMenuOpen && (
+                  <>
+                    {/* メニューの外側をタップしたら閉じるための透明な下敷き */}
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setIsMenuOpen(false)}
+                    />
+                    <div className="absolute right-0 top-7 z-50 w-32 bg-white border border-[#f1f5f9] rounded-[10px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] overflow-hidden">
+                      <button
+                        className="w-full px-4 py-3 text-left text-[14px] text-[#334155] hover:bg-[#f8fafc]"
+                        onClick={() => router.push(`/posts/${post.id}/edit`)}
+                      >
+                        編集
+                      </button>
+                      <button
+                        className="w-full px-4 py-3 text-left text-[14px] text-red-500 hover:bg-[#f8fafc]"
+                        onClick={handleDelete}
+                      >
+                        削除
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="self-start">
+                {/* 投稿者をブロックしたら、この投稿はもう見せないので一覧へ戻す */}
+                <ReportMenu
+                  targetType="post"
+                  targetId={post.id}
+                  author={{
+                    id: post.user.id,
+                    name: post.user.nickname || post.user.name,
+                  }}
+                  onBlocked={() => router.push("/posts")}
+                />
+              </div>
+            )}
           </div>
 
           {/* 相談なら状態と、本人だけ「解決済み」の切り替え */}
