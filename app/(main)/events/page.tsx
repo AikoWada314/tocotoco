@@ -10,8 +10,7 @@ import { Calendar } from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "./calendar.css";
 import { useState } from "react";
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import { MeResponse } from "@/app/api/me/route";
+import { useAuthStatus } from "@/app/_hooks/useAuthStatus";
 import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 // Date → "2026-07-01" 形式の文字列に変換
@@ -29,8 +28,7 @@ export default function EventPage() {
     () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   );
 
-  const { token } = useSupabaseSession();
-  const { data: me } = useApiSWR<MeResponse>("/api/me");
+  const { me, isLoggedIn } = useAuthStatus();
 
   // ① 直近のイベント一覧用（今日以降・近い順・最大10件）
   // 一覧は未ログインでも閲覧できる
@@ -40,7 +38,7 @@ export default function EventPage() {
 
   const toggleFavorite = async (e: React.MouseEvent, eventId: number) => {
     e.preventDefault(); // カード全体のリンク遷移を止める
-    if (!token) return; // 未ログインなら何もしない
+    if (!isLoggedIn) return; // 未ログインなら何もしない
     await fetch(`/api/events/${eventId}/favorites`, { method: "POST" });
     // 直近リストと月別カレンダー用、両方のキャッシュを更新
     mutate();
@@ -97,7 +95,7 @@ export default function EventPage() {
   return (
     // ログイン時は固定Footer(下部ナビ)の高さぶん下に余白を取り、最後のカードが隠れないようにする
     <div
-      className={`flex flex-col flex-1 min-h-0 bg-white ${token ? "pb-16" : ""}`}
+      className={`flex flex-col flex-1 min-h-0 bg-white ${isLoggedIn ? "pb-16" : ""}`}
     >
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6">
         <div className="relative flex items-center justify-center py-4">

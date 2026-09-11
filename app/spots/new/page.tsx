@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useApiSWR } from "@/app/_hooks/useApiSWR";
-import { supabase } from "@/app/_libs/supabase";
+import { uploadImage } from "@/app/_libs/storage";
 import { SpotFormValues } from "@/app/(main)/spots/_hooks/useSpotForm";
 import { CreateSpotRequestBody } from "@/app/api/spots/route";
 import { useSpotForm } from "@/app/(main)/spots/_hooks/useSpotForm";
@@ -48,17 +48,7 @@ export default function NewSpotPage() {
     try {
       // 画像が選択されていれば全部アップロードしてURLの配列を作る
       const imageUrls = await Promise.all(
-        values.images.map(async (file) => {
-          const ext = file.name.split(".").pop();
-          const path = `${crypto.randomUUID()}.${ext}`;
-          const { error: uploadError } = await supabase.storage
-            .from("post_images")
-            .upload(path, file);
-          if (uploadError) {
-            throw new Error(uploadError.message);
-          }
-          return path;
-        }),
+        values.images.map((file) => uploadImage(file)),
       );
 
       const body: CreateSpotRequestBody = {

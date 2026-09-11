@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useApiSWR } from "@/app/_hooks/useApiSWR";
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
+import { useAuthStatus } from "@/app/_hooks/useAuthStatus";
 import { Header } from "@/app/_components/Header";
 import { Footer } from "@/app/_components/Footer";
 import { PostsIndexResponse } from "@/app/api/posts/route";
@@ -39,7 +39,7 @@ const SkeletonCards = ({ count }: { count: number }) => (
 );
 
 export default function HomePage() {
-  const { session, isLoading } = useSupabaseSession();
+  const { isLoggedIn, isLoading } = useAuthStatus();
 
   // トップページは未ログインでも見せる（これらのGET APIは公開）
   const { data: postsData } = useApiSWR<PostsIndexResponse>("/api/posts");
@@ -59,7 +59,7 @@ export default function HomePage() {
     <>
       <Header />
       {/* 下部の余白は固定Footer(ログイン時のみ表示)との重なり防止用 */}
-      <div className={`flex-1 bg-[#eff9f5] ${session ? "pb-24" : ""}`}>
+      <div className={`flex-1 bg-[#eff9f5] ${isLoggedIn ? "pb-24" : ""}`}>
         {/* ヒーロー */}
         <section className="bg-white border-b border-[#f1f5f9]">
           <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-24 flex flex-col items-center gap-4 text-center">
@@ -71,7 +71,7 @@ export default function HomePage() {
             </p>
             {!isLoading && (
               <div className="flex flex-col sm:flex-row items-center gap-3 mt-2">
-                {session ? (
+                {isLoggedIn ? (
                   <Link
                     href="/posts"
                     className="bg-[#3a7e69] text-white rounded-full px-8 py-3 text-[14px] font-bold transition-colors hover:bg-[#2f6655]"
@@ -254,7 +254,7 @@ export default function HomePage() {
         </div>
 
         {/* 未ログインの人向け: 会員登録を促すセクション */}
-        {!isLoading && !session && (
+        {!isLoading && !isLoggedIn && (
           <section className="bg-[#3a7e69]">
             <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-16 flex flex-col items-center gap-4 text-center">
               <h2 className="text-[20px] md:text-[28px] font-bold text-white leading-snug">

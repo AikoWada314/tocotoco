@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { supabase } from "@/app/_libs/supabase";
 import Link from "next/link";
 import Image from "next/image";
 import { SubmitButton } from "@/app/_components/SubmitButton";
@@ -27,11 +26,14 @@ export default function ResetPasswordPage() {
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     setServerError(null);
-    const { error } = await supabase.auth.updateUser({
-      password: data.password,
+
+    const res = await fetch("/api/auth/update-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: data.password }),
     });
 
-    if (error) {
+    if (!res.ok) {
       setServerError(
         "パスワードのリセットに失敗しました。時間をおいて再度お試しください。",
       );

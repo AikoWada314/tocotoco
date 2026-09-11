@@ -10,8 +10,7 @@ import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { PageHeader } from "@/app/_components/PageHeader";
 import { formatTimeAgo } from "@/app/_libs/format";
 import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import { MeResponse } from "@/app/api/me/route";
+import { useAuthStatus } from "@/app/_hooks/useAuthStatus";
 import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function Page() {
@@ -23,13 +22,12 @@ export default function Page() {
   const { data: categoryData } = useApiSWR<SpotCategories>(
     "/api/spot-categories",
   );
-  const { token } = useSupabaseSession();
-  const { data: me } = useApiSWR<MeResponse>("/api/me");
+  const { me, isLoggedIn } = useAuthStatus();
   const spot = data?.spot;
   const categories = categoryData?.categories ?? [];
 
   const toggleFavorite = async () => {
-    if (!token) return; // 未ログインなら何もしない
+    if (!isLoggedIn) return; // 未ログインなら何もしない
     await fetch(`/api/spots/${id}/favorites`, { method: "POST" });
     mutate(); // 詳細を再取得して★を更新
   };

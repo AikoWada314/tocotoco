@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/app/_libs/supabase";
+import { mutate } from "swr";
 import Link from "next/link";
 import Image from "next/image";
 import { SubmitButton } from "@/app/_components/SubmitButton";
@@ -31,16 +31,19 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     setServerError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.password,
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: data.email, password: data.password }),
     });
 
-    if (error) {
+    if (!res.ok) {
       setServerError("メールアドレスまたはパスワードが正しくありません");
       return;
     }
 
+    // ログイン状態のキャッシュ(/api/me)を取り直してヘッダー等の表示を切り替える
+    await mutate("/api/me");
     router.replace("/posts");
   };
 

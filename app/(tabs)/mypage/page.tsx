@@ -3,10 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useApiSWR } from "@/app/_hooks/useApiSWR";
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import { MeResponse } from "@/app/api/me/route";
-import { supabase } from "@/app/_libs/supabase";
+import { useAuthStatus } from "@/app/_hooks/useAuthStatus";
 
 const MENU = [
   {
@@ -67,12 +64,12 @@ const MENU = [
 
 export default function MyPage() {
   const router = useRouter();
-  const { session, token } = useSupabaseSession();
-  const { data: me } = useApiSWR<MeResponse>("/api/me");
+  const { me, mutate } = useAuthStatus();
   const user = me?.user;
 
   const handleLogout = async () => {
-    await supabase.auth.signOut(); // セッションを破棄
+    await fetch("/api/auth/logout", { method: "POST" }); // サーバーでセッションを破棄
+    await mutate(); // ログイン状態のキャッシュを取り直してヘッダー等の表示を切り替える
     router.push("/");
   };
 

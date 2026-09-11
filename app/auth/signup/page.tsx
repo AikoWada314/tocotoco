@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/app/_libs/supabase";
 import Link from "next/link";
 import Image from "next/image";
 import { SubmitButton } from "@/app/_components/SubmitButton";
@@ -39,15 +38,18 @@ export default function SignupPage() {
   const onSubmit = async (data: SignupFormData) => {
     setServerError(null);
 
-    const { error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: { name: data.name, nickname: data.nickname },
-      },
+    const res = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: data.email,
+        password: data.password,
+        name: data.name,
+        nickname: data.nickname,
+      }),
     });
 
-    if (error) {
+    if (!res.ok) {
       setServerError("登録に失敗しました。もう一度お試しください。");
       return;
     }

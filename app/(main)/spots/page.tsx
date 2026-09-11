@@ -8,8 +8,7 @@ import { SpotsIndexResponse } from "@/app/api/spots/route";
 import { SpotCategories } from "@/app/api/spot-categories/route";
 import { useState } from "react";
 import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import { MeResponse } from "@/app/api/me/route";
+import { useAuthStatus } from "@/app/_hooks/useAuthStatus";
 import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function SpotPage() {
@@ -21,15 +20,14 @@ export default function SpotPage() {
     "/api/spot-categories",
   );
   const categories = categoryData?.categories ?? [];
-  const { token } = useSupabaseSession();
-  const { data: me } = useApiSWR<MeResponse>("/api/me");
+  const { me, isLoggedIn } = useAuthStatus();
   const [selected, setSelected] = useState<
     SpotsIndexResponse["spots"][number] | null
   >(null);
 
   const toggleFavorite = async (e: React.MouseEvent, spotId: number) => {
     e.preventDefault(); // カード全体のリンク遷移を止める
-    if (!token) return; // 未ログインなら何もしない
+    if (!isLoggedIn) return; // 未ログインなら何もしない
     await fetch(`/api/spots/${spotId}/favorites`, { method: "POST" });
     mutate();
   };

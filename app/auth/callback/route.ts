@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, type EmailOtpType } from "@supabase/supabase-js";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import { COOKIE_OPTIONS } from "@/app/_libs/cookieOptions";
+import { type EmailOtpType } from "@supabase/supabase-js";
+import { createClient } from "@/app/_libs/createClient";
 
 export const GET = async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -10,31 +8,19 @@ export const GET = async (request: NextRequest) => {
   const type = searchParams.get("type");
   const code = searchParams.get("code");
 
-  // Google認証(OAuth)から戻ってきた場合: codeをセッションに交換してCookieに保存する
+  // オープンリダイレクト対策: 遷移先はこのアプリ内のパスだけを許可する
+  const next = searchParams.get("next");
+  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+
+  const supabase = await createClient();
+
+  // Google認証(OAuth)やパスワード再設定メールから戻ってきた場合:
+  // codeをセッションに交換してCookie(httpOnly)に保存する
   if (code) {
-    const cookieStore = await cookies();
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll: () => cookieStore.getAll(),
-          setAll: (cookiesToSet) =>
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, {
-                ...options,
-                ...COOKIE_OPTIONS,
-              }),
-            ),
-        },
-      },
-    );
-
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      return NextResponse.redirect(new URL("/posts", request.url));
+      return NextResponse.redirect(new URL(safeNext ?? "/posts", request.url));
     }
 
     return NextResponse.redirect(
@@ -42,19 +28,19 @@ export const GET = async (request: NextRequest) => {
     );
   }
 
+  // メール内リンクの検証。Cookie対応クライアントなので検証と同時にログイン状態になる
   if (token_hash && type) {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
     const { error } = await supabase.auth.verifyOtp({
       token_hash,
       type: type as EmailOtpType,
     });
 
     if (!error) {
-      return NextResponse.redirect(new URL("/", request.url));
+      // パスワード再設定はこのセッションを使って新パスワードを入力してもらう
+      if (type === "recovery") {
+        return NextResponse.redirect(new URL("/auth/reset-password", request.url));
+      }
+      return NextResponse.redirect(new URL(safeNext ?? "/", request.url));
     }
   }
 

@@ -3,18 +3,19 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { useSupabaseSession } from "../_hooks/useSupabaseSession";
+import { useAuthStatus } from "../_hooks/useAuthStatus";
 import { useApiSWR } from "../_hooks/useApiSWR";
-import { MeResponse } from "@/app/api/me/route";
 import { BellIcon } from "./icons/BellIcon";
 import { NotificationModal } from "./NotificationModal";
 import { MyNotificationsResponse } from "@/app/api/me/notifications/route";
 
 export const Header: React.FC = () => {
-  const { session, isLoading } = useSupabaseSession();
-  const { data: me } = useApiSWR<MeResponse>("/api/me");
+  const { me, isLoggedIn, isLoading } = useAuthStatus();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const { data } = useApiSWR<MyNotificationsResponse>("/api/me/notifications");
+  // 未ログイン時はキーをnullにして取得自体を止める(401を投げ続けないため)
+  const { data } = useApiSWR<MyNotificationsResponse>(
+    isLoggedIn ? "/api/me/notifications" : null,
+  );
   const unreadCount = data?.notifications.filter((n) => !n.isRead).length ?? 0;
 
   return (
@@ -22,7 +23,7 @@ export const Header: React.FC = () => {
       {/* スクロールしても上部に固定(sticky)。半透明白+ぼかしでコンテンツの上に浮く */}
       <header className="sticky top-0 z-50 bg-[rgba(255,255,255,0.95)] backdrop-blur-[6px] border-b border-[#f1f5f9] px-6 h-[73px] font-bold flex justify-between items-center">
         {/* ログイン済みはタイムライン、未ログインはトップページへ */}
-        <Link href={session ? "/posts" : "/"}>
+        <Link href={isLoggedIn ? "/posts" : "/"}>
           <Image
             src="/logo.svg"
             alt="tocotoco logo"
@@ -34,7 +35,7 @@ export const Header: React.FC = () => {
 
         {!isLoading && (
           <div className="flex items-center gap-4">
-            {session ? (
+            {isLoggedIn ? (
               <>
                 <button
                   onClick={() => setIsNotificationOpen(true)}

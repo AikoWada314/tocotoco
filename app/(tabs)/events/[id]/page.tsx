@@ -8,8 +8,7 @@ import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { PageHeader } from "@/app/_components/PageHeader";
 import { formatDateTime, formatTime } from "@/app/_libs/format";
 import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import { MeResponse } from "@/app/api/me/route";
+import { useAuthStatus } from "@/app/_hooks/useAuthStatus";
 import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function Page() {
@@ -18,12 +17,11 @@ export default function Page() {
   const { data, isLoading, mutate } = useApiSWR<EventShowResponse>(
     `/api/events/${id}`,
   );
-  const { token } = useSupabaseSession();
-  const { data: me } = useApiSWR<MeResponse>("/api/me");
+  const { me, isLoggedIn } = useAuthStatus();
   const event = data?.event;
 
   const toggleFavorite = async () => {
-    if (!token) return; // 未ログインなら何もしない
+    if (!isLoggedIn) return; // 未ログインなら何もしない
     await fetch(`/api/events/${id}/favorites`, { method: "POST" });
     mutate(); // 詳細を再取得して★を更新
   };
@@ -44,7 +42,7 @@ export default function Page() {
   return (
     // ログイン時は固定Footer(下部ナビ)の高さぶん下に余白を取り、末尾のコンテンツが隠れないようにする
     <div
-      className={`flex flex-col flex-1 min-h-0 bg-white ${token ? "pb-16" : ""}`}
+      className={`flex flex-col flex-1 min-h-0 bg-white ${isLoggedIn ? "pb-16" : ""}`}
     >
       <PageHeader title="イベント詳細" />
 

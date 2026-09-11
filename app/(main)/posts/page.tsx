@@ -5,10 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { PostsIndexResponse } from "@/app/api/posts/route";
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
+import { useAuthStatus } from "@/app/_hooks/useAuthStatus";
 import { getPostImageUrl } from "@/app/_libs/storage";
 import { formatTimeAgo } from "@/app/_libs/format";
-import { MeResponse } from "@/app/api/me/route";
 import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 export default function PostPage() {
@@ -16,18 +15,17 @@ export default function PostPage() {
   // 一覧は未ログインでも閲覧できる
   const { data, mutate } = useApiSWR<PostsIndexResponse>("/api/posts");
   const posts = data?.posts ?? [];
-  const { session, token } = useSupabaseSession();
-  const { data: me } = useApiSWR<MeResponse>("/api/me");
+  const { me, isLoggedIn } = useAuthStatus();
   const toggleLike = async (e: React.MouseEvent, postId: number) => {
     e.preventDefault(); // 親Linkの遷移を止める
-    if (!token) return; // 未ログインなら何もしない
+    if (!isLoggedIn) return; // 未ログインなら何もしない
     await fetch(`/api/posts/${postId}/likes`, { method: "POST" });
     mutate(); // 一覧を再取得してハートと数を更新
   };
 
   const toggleFavorite = async (e: React.MouseEvent, postId: number) => {
     e.preventDefault(); // 親Linkの遷移を止める
-    if (!token) return; // 未ログインなら何もしない
+    if (!isLoggedIn) return; // 未ログインなら何もしない
     await fetch(`/api/posts/${postId}/favorites`, { method: "POST" });
     mutate(); // 一覧を再取得してハートと数を更新
   };
@@ -180,7 +178,7 @@ export default function PostPage() {
       </div>
 
       {/* 新規投稿ボタン（フローティング） */}
-      {session && (
+      {isLoggedIn && (
         <button
           onClick={() => router.push("/posts/new")}
           className="fixed bottom-[88px] right-6 bg-[#3a7e69] rounded-full w-14 h-14 flex items-center justify-center shadow-[0px_10px_15px_-3px_rgba(58,126,105,0.3),0px_4px_6px_-4px_rgba(58,126,105,0.3)]"

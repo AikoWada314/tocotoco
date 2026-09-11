@@ -3,10 +3,9 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { useApiSWR } from "@/app/_hooks/useApiSWR";
-import { MeResponse, UpdateMeRequestBody } from "@/app/api/me/route";
-import { supabase } from "@/app/_libs/supabase";
-import { getPostImageUrl } from "@/app/_libs/storage";
+import { useAuthStatus } from "@/app/_hooks/useAuthStatus";
+import { UpdateMeRequestBody } from "@/app/api/me/route";
+import { getPostImageUrl, uploadImage } from "@/app/_libs/storage";
 import { PageHeader } from "@/app/_components/PageHeader";
 
 import {
@@ -16,7 +15,7 @@ import {
 
 export default function Page() {
   ///api/meからかえってきたdataをmeとよぶ（名前決め）
-  const { data: me, mutate } = useApiSWR<MeResponse>("/api/me");
+  const { me, mutate } = useAuthStatus();
   const router = useRouter();
   const {
     register,
@@ -48,12 +47,7 @@ export default function Page() {
       // 新しい画像があればアップロードして公開URLを作る。無ければ今のURLを維持
       let iconUrl = me?.user.iconUrl ?? null;
       if (file) {
-        const ext = file.name.split(".").pop();
-        const path = `${crypto.randomUUID()}.${ext}`;
-        const { error } = await supabase.storage
-          .from("post_images")
-          .upload(path, file);
-        if (error) throw new Error(error.message);
+        const path = await uploadImage(file);
         iconUrl = getPostImageUrl(path);
       }
 

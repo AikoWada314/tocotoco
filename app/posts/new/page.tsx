@@ -4,16 +4,16 @@ import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApiSWR } from "@/app/_hooks/useApiSWR";
-import { supabase } from "@/app/_libs/supabase";
+import { useAuthStatus } from "@/app/_hooks/useAuthStatus";
+import { uploadImage } from "@/app/_libs/storage";
 import { usePostForm } from "@/app/posts/_hooks/usePostForm";
-import { MeResponse } from "@/app/api/me/route";
 import { PostCategories } from "@/app/api/post-categories/route";
 import { PostFormValues } from "@/app/posts/_hooks/usePostForm";
 import { CreatePostRequestBody } from "@/app/api/posts/route";
 
 export default function NewPostPage() {
   const router = useRouter();
-  const { data: me } = useApiSWR<MeResponse>("/api/me");
+  const { me } = useAuthStatus();
   const { data: categoryData } = useApiSWR<PostCategories>(
     "/api/post-categories",
   );
@@ -38,15 +38,7 @@ export default function NewPostPage() {
       // 画像が選択されていればStorageにアップロードして公開URLを取得
       let imageUrl: string | undefined;
       if (imageFile) {
-        const ext = imageFile.name.split(".").pop();
-        const path = `${crypto.randomUUID()}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from("post_images")
-          .upload(path, imageFile);
-        if (uploadError) {
-          throw new Error(uploadError.message);
-        }
-        imageUrl = path;
+        imageUrl = await uploadImage(imageFile);
       }
 
       const body = {

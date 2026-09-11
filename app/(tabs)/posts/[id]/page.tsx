@@ -6,8 +6,7 @@ import { PostShowResponse } from "@/app/api/posts/[id]/route";
 import { getPostImageUrl } from "@/app/_libs/storage";
 import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { PageHeader } from "@/app/_components/PageHeader";
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import { MeResponse } from "@/app/api/me/route";
+import { useAuthStatus } from "@/app/_hooks/useAuthStatus";
 import { useState } from "react";
 import {
   useCommentForm,
@@ -23,8 +22,7 @@ export default function Page() {
     `/api/posts/${id}`,
   );
   const post = data?.post;
-  const { token } = useSupabaseSession();
-  const { data: me } = useApiSWR<MeResponse>("/api/me");
+  const { me, isLoggedIn } = useAuthStatus();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { register, handleSubmit, reset } = useCommentForm();
   const onSubmit = async (values: CommentFormValues) => {
@@ -49,12 +47,12 @@ export default function Page() {
     }
   };
   const toggleLike = async () => {
-    if (!token) return;
+    if (!isLoggedIn) return;
     await fetch(`/api/posts/${id}/likes`, { method: "POST" });
     mutate();
   };
   const toggleFavorite = async () => {
-    if (!token) return;
+    if (!isLoggedIn) return;
     await fetch(`/api/posts/${id}/favorites`, { method: "POST" });
     mutate();
   };
@@ -75,7 +73,7 @@ export default function Page() {
   return (
     // ログイン時は固定Footer(下部ナビ)の高さぶん下に余白を取り、コメント入力バーをナビの上に置く
     <div
-      className={`flex flex-col flex-1 min-h-0 bg-white ${token ? "pb-16" : ""}`}
+      className={`flex flex-col flex-1 min-h-0 bg-white ${isLoggedIn ? "pb-16" : ""}`}
     >
       <PageHeader title="つぶやき詳細" />
 
