@@ -35,7 +35,8 @@ export const proxy = async (request: NextRequest) => {
   const pathname = request.nextUrl.pathname;
   const isProtected =
     PROTECTED_PATHS.some((path) => pathname.startsWith(path)) ||
-    pathname.endsWith("/reviews/new");
+    pathname.endsWith("/reviews/new") ||
+    pathname.endsWith("/edit");
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
