@@ -3,7 +3,13 @@ import { createServerClient } from "@supabase/ssr";
 import { COOKIE_OPTIONS } from "@/app/_libs/cookieOptions";
 
 // tocotocoは未ログインでも閲覧できる公開型のため、保護したいパスだけを列挙する
-const PROTECTED_PATHS = ["/mypage", "/posts/new", "/spots/new", "/events/new"];
+const PROTECTED_PATHS = [
+  "/mypage",
+  "/posts/new",
+  "/spots/new",
+  "/events/new",
+  "/admin",
+];
 
 export const proxy = async (request: NextRequest) => {
   const ref = { response: NextResponse.next({ request }) };

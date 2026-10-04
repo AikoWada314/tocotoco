@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { PostShowResponse } from "@/app/api/posts/[id]/route";
 import { getPostImageUrl } from "@/app/_libs/storage";
 import { useApiSWR } from "@/app/_hooks/useApiSWR";
@@ -14,9 +14,11 @@ import {
 } from "@/app/posts/_hooks/useCommentForm";
 import { formatDateTime, formatTimeAgo } from "@/app/_libs/format";
 import { FavoriteButton } from "@/app/_components/FavoriteButton";
+import { ReportMenu } from "@/app/_components/ReportMenu";
 
 export default function Page() {
   const { id } = useParams();
+  const router = useRouter();
   // 詳細は未ログインでも閲覧できる
   const { data, isLoading, mutate } = useApiSWR<PostShowResponse>(
     `/api/posts/${id}`,
@@ -99,16 +101,18 @@ export default function Page() {
                 {formatDateTime(post.createdAt)}
               </p>
             </div>
-            <button
-              className="shrink-0 px-1 self-start pt-1"
-              aria-label="メニュー"
-            >
-              <svg width="16" height="4" viewBox="0 0 16 4" fill="none">
-                <circle cx="2" cy="2" r="1.5" fill="#94a3b8" />
-                <circle cx="8" cy="2" r="1.5" fill="#94a3b8" />
-                <circle cx="14" cy="2" r="1.5" fill="#94a3b8" />
-              </svg>
-            </button>
+            <div className="self-start">
+              {/* 投稿者をブロックしたら、この投稿はもう見せないので一覧へ戻す */}
+              <ReportMenu
+                targetType="post"
+                targetId={post.id}
+                author={{
+                  id: post.user.id,
+                  name: post.user.nickname || post.user.name,
+                }}
+                onBlocked={() => router.push("/posts")}
+              />
+            </div>
           </div>
 
           {/* 本文 */}
@@ -213,9 +217,20 @@ export default function Page() {
                     <p className="text-[14px] font-medium text-[#0f172a]">
                       {comment.user.nickname || comment.user.name}
                     </p>
-                    <span className="text-[10px] text-[#94a3b8] shrink-0 mt-0.5">
-                      {formatTimeAgo(comment.createdAt)}
-                    </span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className="text-[10px] text-[#94a3b8] mt-0.5">
+                        {formatTimeAgo(comment.createdAt)}
+                      </span>
+                      <ReportMenu
+                        targetType="comment"
+                        targetId={comment.id}
+                        author={{
+                          id: comment.user.id,
+                          name: comment.user.nickname || comment.user.name,
+                        }}
+                        onBlocked={() => mutate()}
+                      />
+                    </div>
                   </div>
                   <p className="text-[14px] text-[#334155] leading-[21px] mt-1 whitespace-pre-wrap">
                     {comment.content}

@@ -1,6 +1,7 @@
 import { prisma } from "@/app/_libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/app/_libs/auth";
+import { getBlockedUserIds, getCurrentUser } from "@/app/_libs/currentUser";
 
 //投稿一覧の型定義
 export type PostsIndexResponse = {
@@ -50,10 +51,13 @@ export type PostsIndexResponse = {
   }[];
 };
 
-//投稿一覧の取得
-export const GET = async () => {
+//投稿一覧の取得（ブロックしているユーザーの投稿は除く）
+export const GET = async (request: NextRequest) => {
   try {
+    const me = await getCurrentUser(request);
+    const blockedUserIds = await getBlockedUserIds(me?.id);
     const posts = await prisma.post.findMany({
+      where: { userId: { notIn: blockedUserIds } },
       include: {
         category: true,
         images: true,

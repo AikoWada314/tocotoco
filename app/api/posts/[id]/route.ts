@@ -1,5 +1,6 @@
 import { prisma } from "@/app/_libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { getBlockedUserIds, getCurrentUser } from "@/app/_libs/currentUser";
 
 //投稿詳細の型定義
 export type PostShowResponse = {
@@ -65,6 +66,8 @@ export const GET = async (
 ) => {
   const { id } = await params;
   try {
+    const me = await getCurrentUser(request);
+    const blockedUserIds = await getBlockedUserIds(me?.id);
     const post = await prisma.post.findUnique({
       where: {
         id: Number(id),
@@ -83,6 +86,7 @@ export const GET = async (
           },
         },
         comments: {
+          where: { userId: { notIn: blockedUserIds } }, // ブロック中のユーザーのコメントは出さない
           include: {
             user: {
               select: { id: true, name: true, nickname: true, iconUrl: true },
