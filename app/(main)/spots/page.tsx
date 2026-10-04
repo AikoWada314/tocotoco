@@ -7,9 +7,150 @@ import { useApiSWR } from "@/app/_hooks/useApiSWR";
 import { SpotsIndexResponse } from "@/app/api/spots/route";
 import { SpotCategories } from "@/app/api/spot-categories/route";
 import { useState } from "react";
-import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
+import {
+  APIProvider,
+  Map,
+  AdvancedMarker,
+  useMap,
+} from "@vis.gl/react-google-maps";
 import { useAuthStatus } from "@/app/_hooks/useAuthStatus";
 import { FavoriteButton } from "@/app/_components/FavoriteButton";
+
+type Spot = SpotsIndexResponse["spots"][number];
+type Category = SpotCategories["categories"][number];
+
+// 全角/半角・大文字/小文字の違いを無視して比べるための正規化
+const normalize = (text: string) => text.normalize("NFKC").toLowerCase();
+
+// 地図の上に重ねる検索バー（スポット名・住所とカテゴリーで絞り込む）
+// useMapでピン位置へ移動させるため、APIProviderの内側で使う
+function SpotSearchBar({
+  query,
+  onQueryChange,
+  categories,
+  categoryId,
+  onCategoryChange,
+  results,
+  onSelect,
+}: {
+  query: string;
+  onQueryChange: (query: string) => void;
+  categories: Category[];
+  categoryId: number | null;
+  onCategoryChange: (categoryId: number | null) => void;
+  results: Spot[];
+  onSelect: (spot: Spot) => void;
+}) {
+  const map = useMap();
+  const [isOpen, setIsOpen] = useState(false);
+  const showList = isOpen && query.trim() !== "";
+
+  const handleSelect = (spot: Spot) => {
+    onSelect(spot);
+    map?.panTo({ lat: spot.lat, lng: spot.lng });
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="absolute left-4 right-4 top-3 z-20">
+      <form
+        role="search"
+        onSubmit={(e) => {
+          e.preventDefault();
+          // Enterで候補が1件だけならそのスポットを開く
+          if (results.length === 1) handleSelect(results[0]);
+        }}
+      >
+        <div className="relative">
+          <svg
+            className="absolute left-[14.5px] top-1/2 -translate-y-1/2 pointer-events-none"
+            width="15"
+            height="15"
+            viewBox="0 0 15 15"
+            fill="none"
+          >
+            <circle cx="6" cy="6" r="5" stroke="#64748b" strokeWidth="1.5" />
+            <path
+              d="M10 10L13 13"
+              stroke="#64748b"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => {
+              onQueryChange(e.target.value);
+              setIsOpen(true);
+            }}
+            onFocus={() => setIsOpen(true)}
+            placeholder="スポット名・住所で検索"
+            aria-label="スポット名・住所で検索"
+            className="w-full rounded-[12px] bg-white py-2.5 pl-10 pr-4 text-[16px] text-[#0f172a] shadow-[0_4px_20px_rgba(0,0,0,0.12)] outline-none placeholder:text-[#64748b]"
+          />
+        </div>
+      </form>
+
+      {/* カテゴリーの絞り込み（横スクロール。nullは「すべて」） */}
+      {categories.length > 0 && (
+        <div className="mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+          {[{ id: null, name: "すべて" }, ...categories].map((category) => {
+            const active = category.id === categoryId;
+            return (
+              <button
+                key={category.id ?? "all"}
+                type="button"
+                aria-pressed={active}
+                onClick={() => onCategoryChange(category.id)}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.12)] transition-colors ${
+                  active
+                    ? "bg-[#3a7e69] text-white"
+                    : "bg-white text-[#0f172a] hover:bg-[#f8fafc]"
+                }`}
+              >
+                {category.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* 候補リスト */}
+      {showList && (
+        <div className="mt-2 max-h-[50dvh] overflow-y-auto rounded-[12px] bg-white shadow-[0_4px_20px_rgba(0,0,0,0.12)]">
+          {results.length === 0 ? (
+            <p className="px-4 py-3 text-[14px] text-[#64748b]">
+              「{query.trim()}」に当てはまるスポットはありません
+            </p>
+          ) : (
+            <ul>
+              {results.map((spot) => (
+                <li
+                  key={spot.id}
+                  className="border-b border-[#f1f5f9] last:border-b-0"
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSelect(spot)}
+                    className="block w-full px-4 py-2.5 text-left hover:bg-[#f8fafc]"
+                  >
+                    <p className="truncate text-[14px] font-medium text-[#0f172a]">
+                      {spot.name}
+                    </p>
+                    <p className="truncate text-[12px] text-[#64748b]">
+                      {spot.address}
+                    </p>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function SpotPage() {
   // 一覧は未ログインでも閲覧できる
@@ -21,9 +162,9 @@ export default function SpotPage() {
   );
   const categories = categoryData?.categories ?? [];
   const { me, isLoggedIn } = useAuthStatus();
-  const [selected, setSelected] = useState<
-    SpotsIndexResponse["spots"][number] | null
-  >(null);
+  const [selected, setSelected] = useState<Spot | null>(null);
+  const [query, setQuery] = useState("");
+  const [categoryId, setCategoryId] = useState<number | null>(null);
 
   const toggleFavorite = async (e: React.MouseEvent, spotId: number) => {
     e.preventDefault(); // カード全体のリンク遷移を止める
@@ -43,6 +184,24 @@ export default function SpotPage() {
         スポットの読み込みに失敗しました
       </div>
     );
+  // 検索語（名前か住所に含む）とカテゴリーで絞る（ピンも同じ結果に合わせる）
+  const keyword = normalize(query.trim());
+  const filteredSpots = spots.filter(
+    (spot) =>
+      (categoryId === null || spot.categoryId === categoryId) &&
+      (!keyword ||
+        normalize(spot.name).includes(keyword) ||
+        normalize(spot.address).includes(keyword)),
+  );
+
+  // カテゴリーを切り替えたとき、開いているカードが対象外なら閉じる
+  const changeCategory = (nextId: number | null) => {
+    setCategoryId(nextId);
+    if (selected && nextId !== null && selected.categoryId !== nextId) {
+      setSelected(null);
+    }
+  };
+
   const selectedFavorites =
     spots.find((s) => s.id === selected?.id)?.favorites ??
     selected?.favorites ??
@@ -68,8 +227,11 @@ export default function SpotPage() {
           defaultCenter={{ lat: 34.8216, lng: 135.4289 }}
           defaultZoom={14}
           mapId="DEMO_MAP_ID"
+          // 上部の検索バーと重ならないよう、地図/航空写真・全画面ボタンは出さない
+          mapTypeControl={false}
+          fullscreenControl={false}
         >
-          {spots.map((spot) => (
+          {filteredSpots.map((spot) => (
             <AdvancedMarker
               key={spot.id}
               position={{ lat: spot.lat, lng: spot.lng }}
@@ -77,6 +239,16 @@ export default function SpotPage() {
             />
           ))}
         </Map>
+
+        <SpotSearchBar
+          query={query}
+          onQueryChange={setQuery}
+          categories={categories}
+          categoryId={categoryId}
+          onCategoryChange={changeCategory}
+          results={filteredSpots}
+          onSelect={setSelected}
+        />
 
         {/* スポット追加ボタン（カード表示中はカードの上に逃がす） */}
         <Link
