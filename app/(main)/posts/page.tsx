@@ -9,6 +9,8 @@ import { useAuthStatus } from "@/app/_hooks/useAuthStatus";
 import { getPostImageUrl } from "@/app/_libs/storage";
 import { formatTimeAgo } from "@/app/_libs/format";
 import { FavoriteButton } from "@/app/_components/FavoriteButton";
+import { ResolvedBadge } from "@/app/_components/ResolvedBadge";
+import { CONSULT_CATEGORY_NAME } from "@/app/_libs/postCategory";
 
 export default function PostPage() {
   const router = useRouter();
@@ -85,7 +87,10 @@ export default function PostPage() {
                     <span className="text-[12px] text-[#94a3b8]">
                       {formatTimeAgo(post.createdAt)}
                     </span>
-                    <div className="ml-auto shrink-0">
+                    <div className="ml-auto shrink-0 flex items-center gap-1">
+                      {post.category.name === CONSULT_CATEGORY_NAME && (
+                        <ResolvedBadge isResolved={post.isResolved} />
+                      )}
                       <span className="text-[10px] font-bold text-[#3a7e69] bg-[rgba(58,126,105,0.1)] rounded-full px-2 py-0.5">
                         {post.category.name}
                       </span>
