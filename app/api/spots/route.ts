@@ -7,6 +7,7 @@ export type SpotsIndexResponse = {
   spots: {
     id: number;
     name: string;
+    address: string;
     description: string | null;
     lat: number;
     lng: number;
@@ -30,6 +31,7 @@ export const GET = async (request: NextRequest) => {
       select: {
         id: true,
         name: true,
+        address: true,
         lat: true,
         lng: true,
         categoryId: true,
