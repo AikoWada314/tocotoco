@@ -17,20 +17,27 @@ import { useAuthStatus } from "@/app/_hooks/useAuthStatus";
 import { FavoriteButton } from "@/app/_components/FavoriteButton";
 
 type Spot = SpotsIndexResponse["spots"][number];
+type Category = SpotCategories["categories"][number];
 
 // 全角/半角・大文字/小文字の違いを無視して比べるための正規化
 const normalize = (text: string) => text.normalize("NFKC").toLowerCase();
 
-// 地図の上に重ねる検索バー（スポット名・住所で絞り込む）
+// 地図の上に重ねる検索バー（スポット名・住所とカテゴリーで絞り込む）
 // useMapでピン位置へ移動させるため、APIProviderの内側で使う
 function SpotSearchBar({
   query,
   onQueryChange,
+  categories,
+  categoryId,
+  onCategoryChange,
   results,
   onSelect,
 }: {
   query: string;
   onQueryChange: (query: string) => void;
+  categories: Category[];
+  categoryId: number | null;
+  onCategoryChange: (categoryId: number | null) => void;
   results: Spot[];
   onSelect: (spot: Spot) => void;
 }) {
@@ -85,6 +92,30 @@ function SpotSearchBar({
         </div>
       </form>
 
+      {/* カテゴリーの絞り込み（横スクロール。nullは「すべて」） */}
+      {categories.length > 0 && (
+        <div className="mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+          {[{ id: null, name: "すべて" }, ...categories].map((category) => {
+            const active = category.id === categoryId;
+            return (
+              <button
+                key={category.id ?? "all"}
+                type="button"
+                aria-pressed={active}
+                onClick={() => onCategoryChange(category.id)}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.12)] transition-colors ${
+                  active
+                    ? "bg-[#3a7e69] text-white"
+                    : "bg-white text-[#0f172a] hover:bg-[#f8fafc]"
+                }`}
+              >
+                {category.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* 候補リスト */}
       {showList && (
         <div className="mt-2 max-h-[50dvh] overflow-y-auto rounded-[12px] bg-white shadow-[0_4px_20px_rgba(0,0,0,0.12)]">
@@ -133,6 +164,7 @@ export default function SpotPage() {
   const { me, isLoggedIn } = useAuthStatus();
   const [selected, setSelected] = useState<Spot | null>(null);
   const [query, setQuery] = useState("");
+  const [categoryId, setCategoryId] = useState<number | null>(null);
 
   const toggleFavorite = async (e: React.MouseEvent, spotId: number) => {
     e.preventDefault(); // カード全体のリンク遷移を止める
@@ -152,15 +184,23 @@ export default function SpotPage() {
         スポットの読み込みに失敗しました
       </div>
     );
-  // 検索語があれば、名前か住所に含むスポットだけに絞る（ピンも同じ結果に合わせる）
+  // 検索語（名前か住所に含む）とカテゴリーで絞る（ピンも同じ結果に合わせる）
   const keyword = normalize(query.trim());
-  const filteredSpots = keyword
-    ? spots.filter(
-        (spot) =>
-          normalize(spot.name).includes(keyword) ||
-          normalize(spot.address).includes(keyword),
-      )
-    : spots;
+  const filteredSpots = spots.filter(
+    (spot) =>
+      (categoryId === null || spot.categoryId === categoryId) &&
+      (!keyword ||
+        normalize(spot.name).includes(keyword) ||
+        normalize(spot.address).includes(keyword)),
+  );
+
+  // カテゴリーを切り替えたとき、開いているカードが対象外なら閉じる
+  const changeCategory = (nextId: number | null) => {
+    setCategoryId(nextId);
+    if (selected && nextId !== null && selected.categoryId !== nextId) {
+      setSelected(null);
+    }
+  };
 
   const selectedFavorites =
     spots.find((s) => s.id === selected?.id)?.favorites ??
@@ -203,6 +243,9 @@ export default function SpotPage() {
         <SpotSearchBar
           query={query}
           onQueryChange={setQuery}
+          categories={categories}
+          categoryId={categoryId}
+          onCategoryChange={changeCategory}
           results={filteredSpots}
           onSelect={setSelected}
         />
