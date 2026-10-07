@@ -107,7 +107,7 @@ export const POST = async (request: NextRequest) => {
         "対象の内容:",
         target.text.slice(0, 500),
         "",
-        "管理ページで確認してください: /admin",
+        `管理ページで確認してください: ${request.nextUrl.origin}/admin`,
       ]
         .filter((line) => line !== null)
         .join("\n"),
