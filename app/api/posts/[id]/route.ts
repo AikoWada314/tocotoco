@@ -30,6 +30,7 @@ export type PostShowResponse = {
       updatedAt: Date;
     }[];
     isDraft: boolean;
+    isResolved: boolean;
     createdAt: Date;
     updatedAt: Date;
     category: {

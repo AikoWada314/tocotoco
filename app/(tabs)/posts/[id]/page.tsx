@@ -15,6 +15,8 @@ import {
 import { formatDateTime, formatTimeAgo } from "@/app/_libs/format";
 import { FavoriteButton } from "@/app/_components/FavoriteButton";
 import { ReportMenu } from "@/app/_components/ReportMenu";
+import { ResolvedBadge } from "@/app/_components/ResolvedBadge";
+import { CONSULT_CATEGORY_NAME } from "@/app/_libs/postCategory";
 
 export default function Page() {
   const { id } = useParams();
@@ -57,6 +59,24 @@ export default function Page() {
     if (!isLoggedIn) return;
     await fetch(`/api/posts/${id}/favorites`, { method: "POST" });
     mutate();
+  };
+  const [isResolving, setIsResolving] = useState(false);
+  const toggleResolved = async (isResolved: boolean) => {
+    setIsResolving(true);
+    try {
+      const res = await fetch(`/api/posts/${id}/resolve`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isResolved }),
+      });
+      if (!res.ok) {
+        alert("更新に失敗しました");
+        return;
+      }
+      mutate();
+    } finally {
+      setIsResolving(false);
+    }
   };
 
   if (isLoading)
@@ -114,6 +134,26 @@ export default function Page() {
               />
             </div>
           </div>
+
+          {/* 相談なら状態と、本人だけ「解決済み」の切り替え */}
+          {post.category.name === CONSULT_CATEGORY_NAME && (
+            <div className="flex items-center gap-2 px-4 pb-3">
+              <span className="text-[10px] font-bold text-[#3a7e69] bg-[rgba(58,126,105,0.1)] rounded-full px-2 py-0.5">
+                {post.category.name}
+              </span>
+              <ResolvedBadge isResolved={post.isResolved} />
+              {me?.user.id === post.user.id && (
+                <button
+                  type="button"
+                  onClick={() => toggleResolved(!post.isResolved)}
+                  disabled={isResolving}
+                  className="ml-auto rounded-full border border-[#3a7e69] px-3 py-1 text-[12px] font-medium text-[#3a7e69] disabled:opacity-50"
+                >
+                  {post.isResolved ? "受付中に戻す" : "解決済みにする"}
+                </button>
+              )}
+            </div>
+          )}
 
           {/* 本文 */}
           <div className="px-4">

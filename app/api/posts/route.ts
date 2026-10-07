@@ -34,6 +34,7 @@ export type PostsIndexResponse = {
       id: number;
     }[];
     isDraft: boolean;
+    isResolved: boolean;
     createdAt: Date;
     updatedAt: Date;
     category: {
