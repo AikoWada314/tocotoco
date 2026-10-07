@@ -202,7 +202,7 @@ export default function Page() {
                   disabled={isResolving}
                   className="ml-auto rounded-full border border-[#3a7e69] px-3 py-1 text-[12px] font-medium text-[#3a7e69] disabled:opacity-50"
                 >
-                  {post.isResolved ? "受付中に戻す" : "解決済みにする"}
+                  {post.isResolved ? "回答募集中に戻す" : "解決済みにする"}
                 </button>
               )}
             </div>
