@@ -47,6 +47,7 @@ model Post {
   content    String
   categoryId Int      @map("category_id")
   isDraft    Boolean  @map("is_draft")
+  isResolved Boolean  @default(false) @map("is_resolved") // 「相談」カテゴリーの投稿が解決済みか
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
