@@ -57,7 +57,7 @@ export const POST = async (request: NextRequest) => {
         "",
         content,
         "",
-        "管理ページで確認してください: /admin",
+        `管理ページで確認してください: ${request.nextUrl.origin}/admin`,
       ].join("\n"),
     );
 

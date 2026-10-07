@@ -1,38 +1,38 @@
-//管理者へのメール通知（Resend）。設定が無い・送信に失敗しても、呼び出し元の処理は止めない
-//必要な環境変数: RESEND_API_KEY, ADMIN_NOTIFY_EMAIL（宛先）, NOTIFY_FROM_EMAIL（送信元。未設定ならResendのテスト用アドレス）
+//管理者への通知（Discordのウェブフック）。設定が無い・送信に失敗しても、呼び出し元の処理は止めない
+//必要な環境変数: DISCORD_WEBHOOK_URL（通知を送るチャンネルのウェブフックURL）
+const DISCORD_MAX_LENGTH = 2000; // Discordの1メッセージの上限
+
 export const notifyAdmin = async (subject: string, text: string) => {
-  const apiKey = process.env.RESEND_API_KEY;
-  const to = process.env.ADMIN_NOTIFY_EMAIL;
-  if (!apiKey || !to) {
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+  if (!webhookUrl) {
     console.warn(
-      "[notifyAdmin] RESEND_API_KEY / ADMIN_NOTIFY_EMAIL が未設定のためメールは送りません",
+      "[notifyAdmin] DISCORD_WEBHOOK_URL が未設定のため通知は送りません",
     );
     return;
   }
 
+  const content = `**[tocotoco] ${subject}**\n${text}`;
   try {
-    const res = await fetch("https://api.resend.com/emails", {
+    const res = await fetch(webhookUrl, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        from:
-          process.env.NOTIFY_FROM_EMAIL ?? "tocotoco <onboarding@resend.dev>",
-        to: to.split(",").map((address) => address.trim()),
-        subject: `[tocotoco] ${subject}`,
-        text,
+        content:
+          content.length > DISCORD_MAX_LENGTH
+            ? `${content.slice(0, DISCORD_MAX_LENGTH - 1)}…`
+            : content,
+        // 利用者が書いた本文に @everyone などがあってもメンションさせない
+        allowed_mentions: { parse: [] },
       }),
     });
     if (!res.ok) {
       console.error(
-        "[notifyAdmin] メール送信に失敗しました",
+        "[notifyAdmin] Discordへの通知に失敗しました",
         res.status,
         await res.text(),
       );
     }
   } catch (error) {
-    console.error("[notifyAdmin] メール送信に失敗しました", error);
+    console.error("[notifyAdmin] Discordへの通知に失敗しました", error);
   }
 };
