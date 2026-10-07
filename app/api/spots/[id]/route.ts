@@ -1,5 +1,6 @@
 import { prisma } from "@/app/_libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { getBlockedUserIds, getCurrentUser } from "@/app/_libs/currentUser";
 
 //スポット詳細の型定義
 export type SpotShowResponse = {
@@ -15,10 +16,12 @@ export type SpotShowResponse = {
       imageUrl: string;
     }[];
     reviews: {
+      id: number;
       rating: number;
       comment: string | null;
       createdAt: Date;
       user: {
+        id: number;
         name: string;
         iconUrl: string | null;
       };
@@ -39,6 +42,8 @@ export const GET = async (
 ) => {
   const { id } = await params;
   try {
+    const me = await getCurrentUser(request);
+    const blockedUserIds = await getBlockedUserIds(me?.id);
     const spot = await prisma.spot.findUnique({
       where: {
         id: Number(id),
@@ -55,11 +60,13 @@ export const GET = async (
           select: { imageUrl: true },
         },
         reviews: {
+          where: { userId: { notIn: blockedUserIds } }, // ブロック中のユーザーの口コミは出さない
           select: {
+            id: true,
             rating: true,
             comment: true,
             createdAt: true,
-            user: { select: { name: true, iconUrl: true } },
+            user: { select: { id: true, name: true, iconUrl: true } },
             images: { select: { imageUrl: true } },
           },
         },

@@ -5,6 +5,22 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStatus } from "@/app/_hooks/useAuthStatus";
 
+// 管理者(role=admin)にだけ出すメニュー
+const ADMIN_ITEM = {
+  href: "/admin",
+  label: "管理(通報の確認)",
+  icon: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+};
+
 const MENU = [
   {
     href: "/mypage/posts",
@@ -35,6 +51,21 @@ const MENU = [
         <path
           d="M5 21V5q0-.825.588-1.413T7 3h10q.825 0 1.413.588T19 5v16l-7-3zm2-3.05l5-2.15l5 2.15V5H7z"
           fill="currentColor"
+        />
+      </svg>
+    ),
+  },
+  {
+    href: "/mypage/blocks",
+    label: "ブロック中のユーザー",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
+        <path
+          d="M5.6 5.6l12.8 12.8"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
         />
       </svg>
     ),
@@ -142,30 +173,32 @@ export default function MyPage() {
 
       {/* メニュー（同じ形の行を配列から生成） */}
       <nav className="mt-2 flex flex-col">
-        {MENU.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="flex items-center gap-4 border-b border-[#f1f5f9] px-4 py-4 transition-colors hover:bg-[#f8fafc]"
-          >
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-[8px] bg-[#eff9f5] text-[#3a7e69]">
-              {item.icon}
-            </div>
-            <span className="flex-1 text-[16px] font-medium text-[#0f172a]">
-              {item.label}
-            </span>
-            {/* 右シェブロン */}
-            <svg width="8" height="14" viewBox="0 0 8 14" fill="none">
-              <path
-                d="M1 1l6 6-6 6"
-                stroke="#cbd5e1"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Link>
-        ))}
+        {[...MENU, ...(user?.role === "admin" ? [ADMIN_ITEM] : [])].map(
+          (item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center gap-4 border-b border-[#f1f5f9] px-4 py-4 transition-colors hover:bg-[#f8fafc]"
+            >
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-[8px] bg-[#eff9f5] text-[#3a7e69]">
+                {item.icon}
+              </div>
+              <span className="flex-1 text-[16px] font-medium text-[#0f172a]">
+                {item.label}
+              </span>
+              {/* 右シェブロン */}
+              <svg width="8" height="14" viewBox="0 0 8 14" fill="none">
+                <path
+                  d="M1 1l6 6-6 6"
+                  stroke="#cbd5e1"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </Link>
+          ),
+        )}
       </nav>
 
       {/* ログアウト（下寄せ。footer(h-16)にかぶらないよう下余白を確保） */}

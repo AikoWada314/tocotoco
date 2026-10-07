@@ -9,6 +9,7 @@ export type MeResponse = {
     name: string;
     nickname: string;
     iconUrl: string | null;
+    role: string;
   };
 };
 
@@ -40,7 +41,13 @@ export const GET = async (request: NextRequest) => {
   const upsertUser = (nickname: string) =>
     prisma.user.upsert({
       where: { supabaseUserId: user.id },
-      select: { id: true, name: true, nickname: true, iconUrl: true },
+      select: {
+        id: true,
+        name: true,
+        nickname: true,
+        iconUrl: true,
+        role: true,
+      },
       update: {},
       create: {
         supabaseUserId: user.id,
@@ -93,7 +100,13 @@ export const PATCH = async (request: NextRequest) => {
     const updated = await prisma.user.update({
       where: { supabaseUserId: authUser.id }, // どのユーザーを
       data: { name, nickname, iconUrl }, // 何に更新するか
-      select: { id: true, name: true, nickname: true, iconUrl: true },
+      select: {
+        id: true,
+        name: true,
+        nickname: true,
+        iconUrl: true,
+        role: true,
+      },
     });
     return NextResponse.json<MeResponse>({ user: updated }, { status: 200 });
   } catch (error) {

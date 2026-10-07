@@ -12,6 +12,7 @@ import { formatTimeAgo } from "@/app/_libs/format";
 import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
 import { useAuthStatus } from "@/app/_hooks/useAuthStatus";
 import { FavoriteButton } from "@/app/_components/FavoriteButton";
+import { ReportMenu } from "@/app/_components/ReportMenu";
 
 export default function Page() {
   const { id } = useParams();
@@ -168,9 +169,9 @@ export default function Page() {
               </p>
             ) : (
               <div className="flex flex-col divide-y divide-[#3a7e69]/10">
-                {spot.reviews.map((review, index) => (
+                {spot.reviews.map((review) => (
                   <div
-                    key={index}
+                    key={review.id}
                     className="flex flex-col gap-2 py-4 first:pt-0"
                   >
                     {/* 投稿者・評価・時間 */}
@@ -184,7 +185,7 @@ export default function Page() {
                           className="object-cover"
                         />
                       </div>
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-1 flex-col gap-1">
                         <p className="text-[14px] font-bold text-[#0f172a] leading-none">
                           {review.user.name}
                         </p>
@@ -202,6 +203,12 @@ export default function Page() {
                           </span>
                         </div>
                       </div>
+                      <ReportMenu
+                        targetType="review"
+                        targetId={review.id}
+                        author={{ id: review.user.id, name: review.user.name }}
+                        onBlocked={() => mutate()}
+                      />
                     </div>
 
                     {/* コメント */}
