@@ -281,6 +281,18 @@ export default function HomePage() {
             </div>
           </section>
         )}
+
+        {/* お問い合わせ（未ログインでも送れる） */}
+        <p className="py-6 text-center text-[12px] text-[#64748b]">
+          ご意見・不具合のご報告は{" "}
+          <Link
+            href="/contact"
+            className="font-bold text-[#3a7e69] underline transition-opacity hover:opacity-80"
+          >
+            お問い合わせ
+          </Link>{" "}
+          から
+        </p>
       </div>
       <Footer />
     </>

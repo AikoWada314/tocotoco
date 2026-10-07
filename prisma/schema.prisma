@@ -38,6 +38,7 @@ model User {
   reports      Report[]
   blocking     UserBlock[] @relation("Blocker")
   blockedBy    UserBlock[] @relation("Blocked")
+  contacts     Contact[]
 
   @@map("users")
 }
@@ -337,4 +338,24 @@ model UserBlock {
 
   @@unique([blockerId, blockedId])
   @@map("user_blocks")
+}
+
+// --- お問い合わせ ---
+
+// 未ログインでも送れる（ログイン中ならuserIdを残す）
+model Contact {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     @map("user_id")
+  name      String?
+  email     String
+  category  String
+  content   String
+  status    String   @default("open") // "open" | "resolved"
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@map("contacts")
 }
