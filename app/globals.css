@@ -18,3 +18,12 @@ body {
   color: var(--foreground);
   font-family: var(--font-noto-sans-jp), sans-serif;
 }
+
+/* Tailwind v4からボタンのカーソルがブラウザ標準(default)になったため、
+   クリックできるボタンは全てポインターに戻す(無効中のボタンは除く) */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
